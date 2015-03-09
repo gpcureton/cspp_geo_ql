@@ -80,6 +80,7 @@ class GOES_L1():
 
         self.l1_file = l1_file
         self.file_obj = SD(l1_file)
+        self.attrs = self.file_obj.attributes()
         self.data_dict = self.file_obj.datasets()
         self.datanames = self.data_dict.keys()
         self.datanames.sort()
@@ -118,7 +119,7 @@ class GOES_L1():
 
         # Create main axes instance, leaving room for colorbar at bottom,
         # and also get the Bbox of the axes instance
-        ax_rect = [0.05, 0.18, 0.9, 0.75  ] # [left,bottom,width,height]
+        ax_rect = [0.05, 0.15, 0.9, 0.8  ] # [left,bottom,width,height]
         ax = fig.add_axes(ax_rect,axis_bgcolor='lightgray')
 
         # Granule axis title
@@ -135,7 +136,7 @@ class GOES_L1():
         ppl.setp(ax.get_yticklines(),visible=False)
 
         # add a colorbar axis
-        cax_rect = [0.05 , 0.10, 0.9 , 0.05 ] # [left,bottom,width,height]
+        cax_rect = [0.05 , 0.05, 0.9 , 0.05 ] # [left,bottom,width,height]
         cax = fig.add_axes(cax_rect,frameon=False) # setup colorbar axes
 
         # Plot the colorbar.
@@ -163,10 +164,6 @@ class GOES_L1():
         stride        = plot_options['stride']
         lat_0         = plot_options['lat_0']
         lon_0         = plot_options['lon_0']
-        latMin        = plot_options['latMin']
-        lonMin        = plot_options['lonMin']
-        latMax        = plot_options['latMax']
-        lonMax        = plot_options['lonMax']
         plotMin       = plot_options['plotMin']
         plotMax       = plot_options['plotMax']
         map_res       = plot_options['map_res']
@@ -185,41 +182,23 @@ class GOES_L1():
                     format(cbar_title))
             return -1
 
-        # Compute the central lat and lon if they are not specified
-        if (lat_0==None) and (lon_0==None):
-            geo_shape = lat.shape
-            nrows, ncols = geo_shape[0],geo_shape[1]
-            LOG.debug("nrows,ncols= ({},{})".format(nrows,ncols))
-            # Non lat/lon pair given, use the central unmasked values.
-            row_idx = int(nrows/2.)
-            col_idx = int(ncols/2.)
-            lat_0 = lat[row_idx,col_idx]
-            lon_0 = lon[row_idx,col_idx]
-            LOG.info("No lat/lon pair given, using ({:4.2f},{:4.2f})".
-                    format(lat_0,lon_0))
-
-        if (latMin==None) and (latMax==None):
-            LOG.info("Calculating lat extent...")
-            latMin = np.min(lat)
-            latMax = np.max(lat)
-            LOG.info("Latitude extent: ({:4.2f},{:4.2f})".format(latMin,latMax))
-        if (lonMin==None) and (lonMax==None):
-            LOG.info("Calculating lon extent...")
-            lonMin = np.min(lon)
-            lonMax = np.max(lon)
-            LOG.info("Longitude extent: ({:4.2f},{:4.2f})".format(lonMin,lonMax))
-
-        # General Setup
-        figWidth,figHeight = 5.,5.
-        ax_rect = [0.05, 0.18, 0.9, 0.75  ] # [left,bottom,width,height]
-
-        fig = Figure(figsize=(figWidth,figHeight))
+        # Create figure with default size, and create canvas to draw on
+        scale=1.5
+        fig = Figure(figsize=(scale*5,scale*5))
         canvas = FigureCanvas(fig)
 
+        # Create main axes instance, leaving room for colorbar at bottom,
+        # and also get the Bbox of the axes instance
+        ax_rect = [0.05, 0.15, 0.9, 0.8  ] # [left,bottom,width,height]
         ax = fig.add_axes(ax_rect,axis_bgcolor='lightgray')
 
-        m = Basemap(projection='geos',lon_0=lon_0,ax=ax,fix_aspect=True,resolution=map_res)
+        # Granule axis title
+        ax_title = ppl.setp(ax,title=title)
+        ppl.setp(ax_title,fontsize=12)
+        ppl.setp(ax_title,family="sans-serif")
 
+        # Setup the map
+        m = Basemap(projection='geos',lon_0=lon_0,ax=ax,fix_aspect=True,resolution=map_res)
 
         x,y=m(lon[::stride,::stride],lat[::stride,::stride])
 
@@ -231,6 +210,8 @@ class GOES_L1():
         m.drawmeridians(np.arange(-180,180,30), color = '0.25', 
                 linewidth = 0.5)
 
+        LOG.debug('data.shape = {}'.format(data.shape))
+        LOG.debug('data_mask.shape = {}'.format(data_mask.shape))
         data = ma.array(data[::stride,::stride],mask=data_mask[::stride,::stride])
 
         plotMin = np.min(data) if plotMin==None else plotMin
@@ -252,13 +233,18 @@ class GOES_L1():
         ppl.setp(ax.get_xticklabels(), visible=False)
         ppl.setp(ax.get_yticklabels(), visible=False)
 
-        #ax.set_aspect('equal')
-
+        # add a colorbar axis
         cax_rect = [0.05 , 0.05, 0.9 , 0.05 ] # [left,bottom,width,height]
         cax = fig.add_axes(cax_rect,frameon=False) # setup colorbar axes
-        cb = fig.colorbar(cs, cax=cax, orientation='horizontal')
 
-        txt = cax.set_title(cbar_title)
+        # Plot the colorbar.
+        cb = fig.colorbar(cs, cax=cax, orientation='horizontal')
+        ppl.setp(cax.get_xticklabels(),fontsize=9)
+        ppl.setp(cax.get_xticklines(),visible=False)
+
+        # Colourbar title
+        cax_title = ppl.setp(cax,title=cbar_title)
+        ppl.setp(cax_title,fontsize=10)
 
         #
         # Add a small globe with the swath indicated on it #
@@ -327,6 +313,7 @@ def _argparse():
                 'plotMin'  : None,
                 'plotMax'  : None,
                 'scatter_plot':False,
+                'unnavigated':False,
                 'pointSize':1,
                 'map_res':'c',
                 'output_file':None,
@@ -452,6 +439,13 @@ def _argparse():
                       help="Generate the plot using a scatterplot approach."
                       )
 
+    parser.add_argument('--unnavigated',
+                      action="store_true",
+                      dest="unnavigated",
+                      default=defaults["unnavigated"],
+                      help="Do not navigate the data, just display the image."
+                      )
+
     parser.add_argument('-P','--pointSize',
                       action="store",
                       dest="pointSize",
@@ -533,6 +527,7 @@ def main():
     plotMin = options.plotMin
     plotMax = options.plotMax
     doScatterPlot = options.doScatterPlot
+    unnavigated = options.unnavigated
     pointSize = options.pointSize
     map_res = options.map_res
     output_file  = options.output_file
@@ -547,12 +542,19 @@ def main():
     lons = goes_l1_obj.Dataset(goes_l1_obj,'pixel_longitude').dset
     data_obj = goes_l1_obj.Dataset(goes_l1_obj,dataset)
 
-    LOG.info('Subsatellite_Longitude = {}'.format(goes_l1_obj.file_obj.attrs['units']))
-
-    sys.exit(0)
+    LOG.info('Subsatellite_Longitude = {}'.format(goes_l1_obj.attrs['Subsatellite_Longitude']))
+    lon_0 = goes_l1_obj.attrs['Subsatellite_Longitude'] if lon_0==None else lon_0
 
     data = data_obj.dset
-    data_mask = data.mask
+
+    if ma.is_masked(data):
+        if data.mask.shape == ():
+            data_mask = np.ones(data.shape,dtype='bool')
+        else:
+            data_mask = data.mask
+    else: 
+        data_mask = np.zeros(data.shape,dtype='bool')
+
     plot_title = "{}".format(input_file)
     cbar_title = "{} ({})".format(data_obj.dataname,data_obj.attrs['units'])
 
@@ -572,6 +574,7 @@ def main():
         output_file = "{}_{}.png".format(outputFilePrefix,file_suffix)
     if output_file!=None and outputFilePrefix!=None :
         output_file = "{}_{}.png".format(outputFilePrefix,file_suffix)
+
 
     # Define a colormap for each dataset
     cmap_dict={
@@ -612,8 +615,10 @@ def main():
     plot_options['dpi'] = dpi
 
     # Create the plot
-    #goes_l1_obj.plot_L1(data,output_file,**plot_options)
-    #goes_l1_obj.plot_L1_Map(lats,lons,data,data_mask,output_file,**plot_options)
+    if unnavigated :
+        goes_l1_obj.plot_L1(data,output_file,**plot_options)
+    else :
+        goes_l1_obj.plot_L1_Map(lats,lons,data,data_mask,output_file,**plot_options)
 
     return 0
 
