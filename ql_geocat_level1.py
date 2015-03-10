@@ -109,6 +109,7 @@ class GOES_L1():
         units         = plot_options['units']
         plotMin       = plot_options['plotMin']
         plotMax       = plot_options['plotMax']
+        plotLims      = plot_options['plotLims']
         cmap          = plot_options['cmap']
         dpi           = plot_options['dpi']
 
@@ -127,7 +128,8 @@ class GOES_L1():
         ppl.setp(ax_title,fontsize=12)
         ppl.setp(ax_title,family="sans-serif")
 
-        vmin,vmax = None,None
+        LOG.debug('plotLims = {},{}'.format(plotLims[0],plotLims[1]))
+        vmin,vmax = plotLims[0],plotLims[1]
 
         im = ax.imshow(data,interpolation='nearest',vmin=vmin,vmax=vmax,cmap=cmap)
         ppl.setp(ax.get_xticklabels(), visible=False)
@@ -152,7 +154,7 @@ class GOES_L1():
         canvas.draw()
 
         canvas.print_figure(png_file,dpi=dpi)
-        print "Writing to {}...".format(png_file)
+        LOG.info("Writing to {}...".format(png_file))
 
 
     def plot_L1_Map(self,lat,lon,data,data_mask,pngName,**plot_options):
@@ -166,6 +168,7 @@ class GOES_L1():
         lon_0         = plot_options['lon_0']
         plotMin       = plot_options['plotMin']
         plotMax       = plot_options['plotMax']
+        plotLims      = plot_options['plotLims']
         map_res       = plot_options['map_res']
         cmap          = plot_options['cmap']
         doScatterPlot = plot_options['scatterPlot']
@@ -214,17 +217,15 @@ class GOES_L1():
         LOG.debug('data_mask.shape = {}'.format(data_mask.shape))
         data = ma.array(data[::stride,::stride],mask=data_mask[::stride,::stride])
 
-        plotMin = np.min(data) if plotMin==None else plotMin
-        plotMax = np.max(data) if plotMax==None else plotMax
-        LOG.debug("plotMin = {}".format(plotMin))
-        LOG.debug("plotMax = {}".format(plotMax))
+        LOG.debug('plotLims = {},{}'.format(plotLims[0],plotLims[1]))
+        vmin,vmax = plotLims[0],plotLims[1]
 
         if doScatterPlot:
             cs = m.scatter(x,y,s=pointSize,c=data,axes=ax,edgecolors='none',
-                    vmin=plotMin,vmax=plotMax,cmap=cmap)
+                    vmin=vmin,vmax=vmax,cmap=cmap)
         else:
             cs = m.pcolor(x,y,data,axes=ax,edgecolors='none',antialiased=False,
-                    vmin=plotMin,vmax=plotMax,cmap=cmap)
+                    vmin=vmin,vmax=vmax,cmap=cmap)
 
         txt = ax.set_title(title,fontsize=11)
 
@@ -309,7 +310,7 @@ def _argparse():
                 'dataset':'channel_2_reflectance',
                 'stride':1,
                 'lat_0':None,
-                'lat_0':None,
+                'lon_0':None,
                 'plotMin'  : None,
                 'plotMax'  : None,
                 'scatter_plot':False,
@@ -523,7 +524,6 @@ def main():
     lonMin = options.lonMin
     latMax = options.latMax
     lonMax = options.lonMax
-    lonMax = options.lonMax
     plotMin = options.plotMin
     plotMax = options.plotMax
     doScatterPlot = options.doScatterPlot
@@ -594,7 +594,11 @@ def main():
                  'pixel_surface_type': cm.Spectral_r
 
     }
-    # Default plot labels
+    
+    plot_limits={
+    }
+
+    # Default plot options
     plot_options = {}
     plot_options['title'] = plot_title
     plot_options['cbar_title'] = cbar_title
@@ -608,6 +612,7 @@ def main():
     plot_options['lonMax'] = lonMax
     plot_options['plotMin'] = plotMin
     plot_options['plotMax'] = plotMax
+    plot_options['plotLims'] = plot_limits[dataset] if dataset in plot_limits.keys() else [plotMin,plotMax]
     plot_options['map_res'] = map_res
     plot_options['cmap'] = cmap_dict[dataset]
     plot_options['scatterPlot'] = doScatterPlot
