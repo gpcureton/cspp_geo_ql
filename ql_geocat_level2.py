@@ -17,7 +17,7 @@ Minimum commandline:
 
 where...
 
-    INPUTFILE: The fully qualified path to the geocat level-1 input files.
+    INPUTFILE: The fully qualified path to the geocat level-2 input files.
 
     DATASET: One of .
 
@@ -70,6 +70,8 @@ from mpl_toolkits.basemap import Basemap
 
 from pyhdf.SD import SD
 
+import geocat_l2_data
+
 # every module should have a LOG object
 LOG = logging.getLogger(__file__)
 
@@ -98,20 +100,39 @@ class GOES_L2():
 
 
     def close(self):
+        LOG.info('Closing the file {}'.format(self.l2_file))
         self.file_obj.end()
 
 
-    def plot_L2(self,data,png_file,**plot_options):
+    def plot_L2(self,data,png_file,dataset,**plot_options):
+
+        l2_plot_options = geocat_l2_data.Plot_Options.data[dataset]
 
         # Copy the plot options to local variables
         title         = plot_options['title']
         cbar_title    = plot_options['cbar_title']
         units         = plot_options['units']
+        stride        = plot_options['stride']
+        lat_0         = plot_options['lat_0']
+        lon_0         = plot_options['lon_0']
         plotMin       = plot_options['plotMin']
         plotMax       = plot_options['plotMax']
         plotLims      = plot_options['plotLims']
+        map_res       = plot_options['map_res']
         cmap          = plot_options['cmap']
+        doScatterPlot = plot_options['scatterPlot']
+        pointSize     = plot_options['pointSize']
         dpi           = plot_options['dpi']
+
+        '''
+        Plot the input dataset in mapped to particular projection
+        '''
+
+        # If our data is all missing, return
+        if (np.sum(data_mask) == data.size):
+            LOG.warn("Entire {} dataset is missing, aborting".\
+                    format(cbar_title))
+            return -1
 
         # Create figure with default size, and create canvas to draw on
         scale=1.5
@@ -157,8 +178,204 @@ class GOES_L2():
         LOG.info("Writing to {}...".format(png_file))
 
 
-    def plot_L2_Map(self,lat,lon,data,data_mask,pngName,**plot_options):
+    def plot_L2_discrete(self,data,png_file,dataset,**plot_options):
+
+        import geocat_l2_data
+        CMD = geocat_l2_data.CloudMaskData
+
+        # Copy the plot options to local variables
+        title         = plot_options['title']
+        cbar_title    = plot_options['cbar_title']
+        units         = plot_options['units']
+        plotMin       = plot_options['plotMin']
+        plotMax       = plot_options['plotMax']
+        plotLims      = plot_options['plotLims']
+        cmap          = plot_options['cmap']
+        dpi           = plot_options['dpi']
+
+        # Create figure with default size, and create canvas to draw on
+        scale=1.5
+        fig = Figure(figsize=(scale*5,scale*5))
+        canvas = FigureCanvas(fig)
+
+        # Create main axes instance, leaving room for colorbar at bottom,
+        # and also get the Bbox of the axes instance
+        ax_rect = [0.05, 0.18, 0.9, 0.75  ] # [left,bottom,width,height]
+        ax = fig.add_axes(ax_rect,axis_bgcolor='lightgray')
+
+        # Granule axis title
+        ax_title = ppl.setp(ax,title=title)
+        ppl.setp(ax_title,fontsize=12)
+        ppl.setp(ax_title,family="sans-serif")
+
+
+        fill_colours = CMD.data[dataset]['fill_colours']
+        cmap = ListedColormap(fill_colours)
+
+        numCats = np.array(fill_colours).size
+        numBounds = numCats + 1
+
+        tickPos = np.arange(float(numBounds))/float(numCats)
+        tickPos = tickPos[0 :-1] + tickPos[1]/2.
+
+        # Create figure with default size, and create canvas to draw on
+        scale=1.5
+        fig = Figure(figsize=(scale*5,scale*5))
+        canvas = FigureCanvas(fig)
+
+        # Create main axes instance, leaving room for colorbar at bottom,
+        # and also get the Bbox of the axes instance
+        ax_rect = [0.05, 0.18, 0.9, 0.75  ] # [left,bottom,width,height]
+        ax = fig.add_axes(ax_rect,axis_bgcolor='lightgray')
+
+        # Granule axis title
+        ax_title = ppl.setp(ax,title=title)
+        ppl.setp(ax_title,fontsize=12)
+        ppl.setp(ax_title,family="sans-serif")
+
+        data_values = CMD.data[dataset]['values']
+        vmin,vmax = data_values[0],data_values[-1]
+
+        im = ax.imshow(data,interpolation='nearest',vmin=vmin,vmax=vmax,cmap=cmap)
+        ppl.setp(ax.get_xticklabels(), visible=False)
+        ppl.setp(ax.get_yticklabels(), visible=False)
+        ppl.setp(ax.get_xticklines(),visible=False)
+        ppl.setp(ax.get_yticklines(),visible=False)
+
+        # add a colorbar axis
+        cax_rect = [0.05 , 0.05, 0.9 , 0.05 ] # [left,bottom,width,height]
+        cax = fig.add_axes(cax_rect,frameon=False) # setup colorbar axes
+
+        # Plot the colorbar.
+        cb = fig.colorbar(im, cax=cax, orientation='horizontal')
+        ppl.setp(cax.get_xticklabels(),fontsize=9)
+        ppl.setp(cax.get_xticklines(),visible=False)
+
+        # Set the colourbar tick locations and ticklabels
+        #ppl.setp(cb.ax,xticks=CMD.ViirsCMTickPos) # In colorbar axis coords (0..1)
+        tickpos_data_coords = vmax*tickPos
+        cb.set_ticks(tickpos_data_coords) # In data coords (0..3)
+        tick_names = CMD.data[dataset]['tick_names']
+        ppl.setp(cb.ax,xticklabels=tick_names)
+
+        # Colourbar title
+        title = CMD.data[dataset]['name']
+        cax_title = ppl.setp(cax,title=title)
+        ppl.setp(cax_title,fontsize=10)
+
+        # Redraw the figure
+        canvas.draw()
+
+        canvas.print_figure(png_file,dpi=dpi)
+        LOG.info("Writing to {}...".format(png_file))
+
+
+    def plot_L2_Map(self,lat,lon,data,data_mask,pngName,dataset,**plot_options):
+
+        l2_plot_options = geocat_l2_data.Plot_Options.data[dataset]
+
+        # Copy the plot options to local variables
+        title         = plot_options['title']
+        cbar_title    = plot_options['cbar_title']
+        units         = plot_options['units']
+        stride        = plot_options['stride']
+        lat_0         = plot_options['lat_0']
+        lon_0         = plot_options['lon_0']
+        plotMin       = plot_options['plotMin']
+        plotMax       = plot_options['plotMax']
+        plotLims      = plot_options['plotLims']
+        map_res       = plot_options['map_res']
+        cmap          = plot_options['cmap']
+        doScatterPlot = plot_options['scatterPlot']
+        pointSize     = plot_options['pointSize']
+        dpi           = plot_options['dpi']
+
+        '''
+        Plot the input dataset in mapped to particular projection
+        '''
+
+        # If our data is all missing, return
+        if (np.sum(data_mask) == data.size):
+            LOG.warn("Entire {} dataset is missing, aborting".\
+                    format(dataset))
+            return -1
+
+        # Create figure with default size, and create canvas to draw on
+        scale=1.5
+        fig = Figure(figsize=(scale*5,scale*5))
+        canvas = FigureCanvas(fig)
+
+        # Create main axes instance, leaving room for colorbar at bottom,
+        # and also get the Bbox of the axes instance
+        ax_rect = [0.05, 0.15, 0.9, 0.8  ] # [left,bottom,width,height]
+        ax = fig.add_axes(ax_rect,axis_bgcolor='lightgray')
+
+        # Granule axis title
+        ax_title = ppl.setp(ax,title=title)
+        ppl.setp(ax_title,fontsize=12)
+        ppl.setp(ax_title,family="sans-serif")
+
+        # Setup the map
+        m = Basemap(projection='geos',lon_0=lon_0,ax=ax,fix_aspect=True,resolution=map_res)
+
+        x,y=m(lon[::stride,::stride],lat[::stride,::stride])
+
+        coastline_color = l2_plot_options['coastline_color']
+        country_color = l2_plot_options['country_color']
+
+        m.drawcoastlines(ax=ax,color=coastline_color,linewidth = 0.5)
+        m.drawcountries(ax=ax,color=country_color)
+        m.fillcontinents(color='0.85',zorder=0)
+        m.drawparallels(np.arange( -90, 91,30), color = '0.25', 
+                linewidth = 0.5)
+        m.drawmeridians(np.arange(-180,180,30), color = '0.25', 
+                linewidth = 0.5)
+
+        LOG.debug('data.shape = {}'.format(data.shape))
+        LOG.debug('data_mask.shape = {}'.format(data_mask.shape))
+        data = ma.array(data[::stride,::stride],mask=data_mask[::stride,::stride])
+
+        vmin,vmax = plotLims[0],plotLims[-1]
+
+        if doScatterPlot:
+            cs = m.scatter(x,y,s=pointSize,c=data,axes=ax,edgecolors='none',
+                    vmin=vmin,vmax=vmax,cmap=cmap)
+        else:
+            cs = m.pcolor(x,y,data,axes=ax,edgecolors='none',antialiased=False,
+                    vmin=vmin,vmax=vmax,cmap=cmap)
+
+        txt = ax.set_title(title,fontsize=11)
+
+        ppl.setp(ax.get_xticklines(),visible=False)
+        ppl.setp(ax.get_yticklines(),visible=False)
+        ppl.setp(ax.get_xticklabels(), visible=False)
+        ppl.setp(ax.get_yticklabels(), visible=False)
+
+        # add a colorbar axis
+        cax_rect = [0.05 , 0.05, 0.9 , 0.05 ] # [left,bottom,width,height]
+        cax = fig.add_axes(cax_rect,frameon=False) # setup colorbar axes
+
+        # Plot the colorbar.
+        cb = fig.colorbar(cs, cax=cax, orientation='horizontal')
+        ppl.setp(cax.get_xticklabels(),fontsize=9)
+        ppl.setp(cax.get_xticklines(),visible=False)
+
+        # Colourbar title
+        #cbar_title = l2_plot_options['name']
+        cax_title = ppl.setp(cax,title=cbar_title)
+        ppl.setp(cax_title,fontsize=10)
+
+        # Redraw the figure
+        canvas.draw()
+        canvas.print_figure(pngName,dpi=dpi)
+
+        LOG.info("Writing image file {}".format(pngName))
+
+
+    def plot_L2_Map_discrete(self,lat,lon,data,data_mask,pngName,dataset,**plot_options):
             
+        l2_plot_options = geocat_l2_data.Plot_Options.data[dataset]
+
         # Copy the plot options to local variables
         title         = plot_options['title']
         cbar_title    = plot_options['cbar_title']
@@ -200,13 +417,25 @@ class GOES_L2():
         ppl.setp(ax_title,fontsize=12)
         ppl.setp(ax_title,family="sans-serif")
 
+        fill_colours = l2_plot_options['fill_colours']
+        cmap = ListedColormap(fill_colours)
+
+        numCats = np.array(fill_colours).size
+        numBounds = numCats + 1
+
+        tickPos = np.arange(float(numBounds))/float(numCats)
+        tickPos = tickPos[0 :-1] + tickPos[1]/2.
+
         # Setup the map
         m = Basemap(projection='geos',lon_0=lon_0,ax=ax,fix_aspect=True,resolution=map_res)
 
         x,y=m(lon[::stride,::stride],lat[::stride,::stride])
 
-        m.drawcoastlines(ax=ax,color='white')
-        m.drawcountries(ax=ax,color='white')
+        coastline_color = l2_plot_options['coastline_color']
+        country_color = l2_plot_options['country_color']
+
+        m.drawcoastlines(ax=ax,color=coastline_color,linewidth = 0.5)
+        m.drawcountries(ax=ax,color=country_color)
         m.fillcontinents(color='0.85',zorder=0)
         m.drawparallels(np.arange( -90, 91,30), color = '0.25', 
                 linewidth = 0.5)
@@ -217,8 +446,8 @@ class GOES_L2():
         LOG.debug('data_mask.shape = {}'.format(data_mask.shape))
         data = ma.array(data[::stride,::stride],mask=data_mask[::stride,::stride])
 
-        LOG.debug('plotLims = {},{}'.format(plotLims[0],plotLims[1]))
-        vmin,vmax = plotLims[0],plotLims[1]
+        data_values = l2_plot_options['values']
+        vmin,vmax = data_values[0],data_values[-1]
 
         if doScatterPlot:
             cs = m.scatter(x,y,s=pointSize,c=data,axes=ax,edgecolors='none',
@@ -243,40 +472,23 @@ class GOES_L2():
         ppl.setp(cax.get_xticklabels(),fontsize=9)
         ppl.setp(cax.get_xticklines(),visible=False)
 
+        # Set the colourbar tick locations and ticklabels
+        #ppl.setp(cb.ax,xticks=l2_plot_options.ViirsCMTickPos) # In colorbar axis coords (0..1)
+        tickpos_data_coords = vmax*tickPos
+        cb.set_ticks(tickpos_data_coords) # In data coords (0..3)
+        tick_names = l2_plot_options['tick_names']
+        ppl.setp(cb.ax,xticklabels=tick_names)
+
         # Colourbar title
+        cbar_title = l2_plot_options['name']
         cax_title = ppl.setp(cax,title=cbar_title)
         ppl.setp(cax_title,fontsize=10)
 
-        #
-        # Add a small globe with the swath indicated on it #
-        #
-
-        # Create main axes instance, leaving room for colorbar at bottom,
-        # and also get the Bbox of the axes instance
-        glax_rect = [0.81, 0.75, 0.18, 0.20 ] # [left,bottom,width,height]
-        glax = fig.add_axes(glax_rect)
-
-        m_globe = Basemap(lat_0=0.,lon_0=0.,\
-            ax=glax,resolution='c',area_thresh=10000.,projection='robin')
-
-        # If we previously had a zero size data array, increase the pointSize
-        # so the data points are visible on the global plot
-        if (np.shape(lon[::stride,::stride])[0]==2) :
-            pointSize = 5.
-
-        x,y=m_globe(lon[::stride,::stride],lat[::stride,::stride])
-        swath = np.zeros(np.shape(x),dtype=int)
-
-        m_globe.drawmapboundary(linewidth=0.1)
-        m_globe.fillcontinents(ax=glax,color='gray',zorder=1)
-        m_globe.drawcoastlines(ax=glax,linewidth=0.1,zorder=3)
-
-        p_globe = m_globe.scatter(x,y,s=pointSize,c="red",axes=glax,edgecolors='none',zorder=2)
-
         # Redraw the figure
         canvas.draw()
-        LOG.info("Writing image file {}".format(pngName))
         canvas.print_figure(pngName,dpi=dpi)
+
+        LOG.info("Writing image file {}".format(pngName))
 
 
 def _argparse():
@@ -303,6 +515,12 @@ def _argparse():
         'ACHA_mode_6_cloud_top_pressure',
         'ACHA_mode_6_cloud_top_height',
         'ACHA_mode_6_cloud_emissivity',
+        'ACHA_mode_7_goes_cloud_optical_depth_vis',
+        'ACHA_mode_7_goes_cloud_top_temperature',
+        'ACHA_mode_7_goes_cloud_top_pressure',
+        'ACHA_mode_7_goes_cloud_top_height',
+        'ACHA_mode_7_goes_cloud_emissivity',
+        'ACHA_mode_7_goes_cloud_particle_effective_radius',
         'DCOMP_mode_3_cloud_optical_depth_vis',
         'DCOMP_mode_3_cloud_particle_effective_radius',
         'DCOMP_mode_3_cloud_liquid_water_path',
@@ -342,8 +560,10 @@ def _argparse():
                 'plotMax'  : None,
                 'scatter_plot':False,
                 'unnavigated':False,
+                'list_datasets':False,
                 'pointSize':1,
                 'map_res':'c',
+                'cmap':None,
                 'output_file':None,
                 'outputFilePrefix' : None,
                 'dpi':200
@@ -372,13 +592,9 @@ def _argparse():
                       dest="dataset",
                       default=defaults["dataset"],
                       type=str,
-                      choices=prodChoices,
                       help='''The geocat level-2 dataset to plot.
-                              Possible values are...
-                              {}.
                               [default: {}]
-                           '''.format(prodChoices.__str__()[1:-1],
-                               defaults["dataset"])
+                           '''.format(defaults["dataset"])
                       )
 
     # Optional arguments 
@@ -474,6 +690,14 @@ def _argparse():
                       help="Do not navigate the data, just display the image."
                       )
 
+    parser.add_argument('--list_datasets',
+                      action="store_true",
+                      dest="list_datasets",
+                      default=defaults["list_datasets"],
+                      help="""List the available datasets, and exit. Specify the
+                      required dataset as 'None'."""
+                      )
+
     parser.add_argument('-P','--pointSize',
                       action="store",
                       dest="pointSize",
@@ -492,6 +716,23 @@ def _argparse():
                       help="""The map coastline resolution. Possible values are 
                       'c' (coarse),'l' (low) and 'i' (intermediate). 
                       [default: '{}']""".format(defaults["map_res"])
+                      )
+
+    parser.add_argument('--cmap',
+                      action="store",
+                      dest="cmap",
+                      default=defaults["cmap"],
+                      type=str,
+                      help="""The matplotlib colormap to use. 
+                      [default: '{}']""".format(defaults["cmap"])
+                      )
+
+    parser.add_argument('--cbar_title',
+                      action="store",
+                      dest="cbar_title",
+                      type=str,
+                      help='''The colourbar title. 
+                      '''
                       )
 
     parser.add_argument('-o','--output_file',
@@ -555,8 +796,11 @@ def main():
     plotMax = options.plotMax
     doScatterPlot = options.doScatterPlot
     unnavigated = options.unnavigated
+    list_datasets = options.list_datasets
     pointSize = options.pointSize
     map_res = options.map_res
+    cmap = options.cmap
+    cbar_title = options.cbar_title
     output_file  = options.output_file
     outputFilePrefix  = options.outputFilePrefix
     dpi = options.dpi
@@ -567,12 +811,29 @@ def main():
 
     lats = goes_l2_obj.Dataset(goes_l2_obj,'pixel_latitude').dset
     lons = goes_l2_obj.Dataset(goes_l2_obj,'pixel_longitude').dset
-    data_obj = goes_l2_obj.Dataset(goes_l2_obj,dataset)
+    sat_zenith_angle = goes_l2_obj.Dataset(goes_l2_obj,'pixel_satellite_zenith_angle').dset
+
+    # If we want to list the datasets, do that here and exit
+    if list_datasets:
+        LOG.info('Datasets in {}:'.format(input_file))
+        for dsets in goes_l2_obj.datanames:
+            print "\t{}".format(dsets)
+        goes_l2_obj.close()
+        sys.exit(1)
+
+    # Read in the desired dataset
+    try:
+        data_obj = goes_l2_obj.Dataset(goes_l2_obj,dataset)
+    except :
+        LOG.error('"{}" is not a valid dataset in {}, aborting.'.format(dataset,input_file))
+        goes_l2_obj.close()
+        sys.exit(1)
 
     LOG.info('Subsatellite_Longitude = {}'.format(goes_l2_obj.attrs['Subsatellite_Longitude']))
     lon_0 = goes_l2_obj.attrs['Subsatellite_Longitude'] if lon_0==None else lon_0
 
-    data = data_obj.dset
+    # Use the solar zenith angle to mask off-disk pixels...
+    data = ma.masked_array(data_obj.dset,mask=sat_zenith_angle.mask)
 
     if ma.is_masked(data):
         if data.mask.shape == ():
@@ -582,8 +843,9 @@ def main():
     else: 
         data_mask = np.zeros(data.shape,dtype='bool')
 
-    plot_title = "{}".format(input_file)
-    cbar_title = "{} ({})".format(data_obj.dataname,data_obj.attrs['units'])
+    plot_title = "{}".format(path.basename(input_file))
+    #if cbar_title==None:
+        #cbar_title = "{} ({})".format(data_obj.dataname,data_obj.attrs['units']) 
 
     input_file = path.basename(input_file)
 
@@ -602,60 +864,12 @@ def main():
     if output_file!=None and outputFilePrefix!=None :
         output_file = "{}_{}.png".format(outputFilePrefix,file_suffix)
 
-    # Define a colormap for each dataset
-    cmap_dict={
-        'pixel_latitude': cm.Spectral_r,
-        'pixel_longitude': cm.Spectral_r,
-        'pixel_solar_zenith_angle': cm.Spectral_r,
-        'pixel_satellite_zenith_angle': cm.Spectral_r,
-        'pixel_relative_azimuth_angle': cm.Spectral_r,
-        'pixel_surface_type': cm.Spectral_r,
-        'pixel_ecosystem_type': cm.Spectral_r,
-        'nwp_x_index': cm.Spectral_r,
-        'nwp_y_index': cm.Spectral_r,
-        'baseline_cmask_goes_nop_cloud_mask': cm.Spectral_r,
-        'goesnp_ctype_cloud_type': cm.Spectral_r,
-        'goesnp_ctype_cloud_phase': cm.Spectral_r,
-        'ACHA_mode_6_cloud_top_temperature': cm.Spectral_r,
-        'ACHA_mode_6_cloud_top_pressure': cm.Spectral_r,
-        'ACHA_mode_6_cloud_top_height': cm.Spectral_r,
-        'ACHA_mode_6_cloud_emissivity': cm.Spectral_r,
-        'DCOMP_mode_3_cloud_optical_depth_vis': cm.Spectral_r,
-        'DCOMP_mode_3_cloud_particle_effective_radius': cm.Spectral_r,
-        'DCOMP_mode_3_cloud_liquid_water_path': cm.Spectral_r,
-        'DCOMP_mode_3_cloud_ice_water_path': cm.Spectral_r,
-        'DCOMP_mode_3_cloud_albedo': cm.Spectral_r,
-        'goesr_fog_fog_mask': cm.Spectral_r,
-        'goesr_fog_MVFR_fog_probability': cm.Spectral_r,
-        'goesr_fog_LIFR_fog_probability': cm.Spectral_r,
-        'goesr_fog_IFR_fog_probability': cm.Spectral_r,
-        'goesr_fog_IFR_RHonly_Fog_Probability': cm.Spectral_r,
-        'goesr_fog_fog_depth': cm.Spectral_r,
-        'goesr_fog_ems7_atmospherically_corrected': cm.Spectral_r,
-        'goesr_fog_surface_temperature_bias': cm.Spectral_r,
-        'goesr_fog_Surface_Temperature_Bias_Global': cm.Spectral_r,
-        'goesr_fog_ref2_stddev': cm.Spectral_r,
-        'goesr_fog_Sfc_Emiss_Chn7': cm.Spectral_r,
-        'goesr_fog_Ems7_Composite': cm.Spectral_r,
-        'goesr_fog_Ref7_Composite': cm.Spectral_r,
-        'goesr_fog_Ref2_Stddev_Composite': cm.Spectral_r,
-        'goesr_fog_bt14_stddev': cm.Spectral_r,
-        'goesr_fog_Max_RH_500ft_Layer_AGL': cm.Spectral_r,
-        'goesr_fog_Max_RH_1000ft_Layer_AGL': cm.Spectral_r,
-        'goesr_fog_Max_RH_3000ft_Layer_AGL': cm.Spectral_r,
-        'goesr_fog_Surface_RH': cm.Spectral_r,
-        'goesr_fog_Refl_Chn2_StdDev_Lrc': cm.Spectral_r,
-    }
-
-    # The plot limits,,,
-    plot_limits={
-        'DCOMP_mode_3_cloud_albedo': [0.,1.5]
-    }
+    l2_plot_options = geocat_l2_data.Plot_Options.data[dataset]
 
     # Default plot options
     plot_options = {}
     plot_options['title'] = plot_title
-    plot_options['cbar_title'] = cbar_title
+    plot_options['cbar_title'] = l2_plot_options['name'] if cbar_title==None else cbar_title
     plot_options['units'] = cbar_title
     plot_options['stride'] = stride
     plot_options['lat_0'] = lat_0
@@ -664,20 +878,37 @@ def main():
     plot_options['lonMin'] = lonMin
     plot_options['latMax'] = latMax
     plot_options['lonMax'] = lonMax
-    plot_options['plotMin'] = plotMin
-    plot_options['plotMax'] = plotMax
-    plot_options['plotLims'] = plot_limits[dataset] if dataset in plot_limits.keys() else [plotMin,plotMax]
+    plot_options['plotMin'] = l2_plot_options['values'][0] if plotMin==None else plotMin
+    plot_options['plotMax'] = l2_plot_options['values'][-1] if plotMax==None else plotMax
+    plot_options['plotLims'] = [plot_options['plotMin'],plot_options['plotMax']]
     plot_options['map_res'] = map_res
-    plot_options['cmap'] = cmap_dict[dataset]
+    #plot_options['cmap'] = l2_plot_options['cmap'] if cmap==None else cmap
     plot_options['scatterPlot'] = doScatterPlot
     plot_options['pointSize'] = pointSize
     plot_options['dpi'] = dpi
 
+    if cmap == None:
+        plot_options['cmap'] = l2_plot_options['cmap']
+    else :
+        try:
+            cmap = getattr(cm,options.cmap)
+        except AttributeError:
+            LOG.warning('Colormap {} does not exist, falling back to Spectral_r'.format(options.cmap))
+            cmap = getattr(cm,'Spectral_r')
+
+    is_l2_discrete = l2_plot_options['discrete']
+
     # Create the plot
     if unnavigated :
-        goes_l2_obj.plot_L2(data,output_file,**plot_options)
+        if is_l2_discrete :
+            goes_l2_obj.plot_L2_discrete(data,output_file,dataset,**plot_options)
+        else :
+            goes_l2_obj.plot_L2(data,output_file,dataset,**plot_options)
     else :
-        goes_l2_obj.plot_L2_Map(lats,lons,data,data_mask,output_file,**plot_options)
+        if is_l2_discrete :
+            goes_l2_obj.plot_L2_Map_discrete(lats,lons,data,data_mask,output_file,dataset,**plot_options)
+        else :
+            goes_l2_obj.plot_L2_Map(lats,lons,data,data_mask,output_file,dataset,**plot_options)
 
     return 0
 
