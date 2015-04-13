@@ -103,17 +103,28 @@ class GOES_L1():
         self.file_obj.end()
 
 
-    def plot_L1(self,data,png_file,**plot_options):
+    def plot_L1(self,data,data_mask,png_file,dataset,**plot_options):
 
         # Copy the plot options to local variables
         title         = plot_options['title']
         cbar_title    = plot_options['cbar_title']
         units         = plot_options['units']
+        stride        = plot_options['stride']
         plotMin       = plot_options['plotMin']
         plotMax       = plot_options['plotMax']
         plotLims      = plot_options['plotLims']
         cmap          = plot_options['cmap']
         dpi           = plot_options['dpi']
+
+        '''
+        Plot the input dataset in in native data coordinates
+        '''
+
+        # If our data is all missing, return
+        if (np.sum(data_mask) == data.size):
+            LOG.warn("Entire {} dataset is missing, aborting".\
+                    format(cbar_title))
+            return -1
 
         # Create figure with default size, and create canvas to draw on
         scale=1.5
@@ -122,7 +133,7 @@ class GOES_L1():
 
         # Create main axes instance, leaving room for colorbar at bottom,
         # and also get the Bbox of the axes instance
-        ax_rect = [0.05, 0.15, 0.9, 0.8  ] # [left,bottom,width,height]
+        ax_rect = [0.10, 0.15, 0.80, 0.8  ] # [left,bottom,width,height]
         ax = fig.add_axes(ax_rect,axis_bgcolor='lightgray')
 
         # Granule axis title
@@ -130,17 +141,24 @@ class GOES_L1():
         ppl.setp(ax_title,fontsize=12)
         ppl.setp(ax_title,family="sans-serif")
 
+        LOG.debug('data.shape = {}'.format(data.shape))
+        LOG.debug('data_mask.shape = {}'.format(data_mask.shape))
+        data = ma.array(data[::stride,::stride],mask=data_mask[::stride,::stride])
+
         LOG.debug('plotLims = {},{}'.format(plotLims[0],plotLims[1]))
         vmin,vmax = plotLims[0],plotLims[1]
 
-        im = ax.imshow(data,interpolation='nearest',vmin=vmin,vmax=vmax,cmap=cmap)
+        im = ax.imshow(data,interpolation='nearest',aspect='auto',vmin=vmin,vmax=vmax,cmap=cmap)
+
+        #txt = ax.set_title(title,fontsize=11)
+
         ppl.setp(ax.get_xticklabels(), visible=False)
         ppl.setp(ax.get_yticklabels(), visible=False)
         ppl.setp(ax.get_xticklines(),visible=False)
         ppl.setp(ax.get_yticklines(),visible=False)
 
         # add a colorbar axis
-        cax_rect = [0.05 , 0.05, 0.9 , 0.05 ] # [left,bottom,width,height]
+        cax_rect = [0.10 , 0.05, 0.8 , 0.05 ] # [left,bottom,width,height]
         cax = fig.add_axes(cax_rect,frameon=False) # setup colorbar axes
 
         # Plot the colorbar.
@@ -155,11 +173,12 @@ class GOES_L1():
         # Redraw the figure
         canvas.draw()
 
+        # Write the figure to file
         canvas.print_figure(png_file,dpi=dpi)
         LOG.info("Writing to {}...".format(png_file))
 
 
-    def plot_L1_Map(self,lat,lon,data,data_mask,pngName,dataset,**plot_options):
+    def plot_L1_Map(self,lat,lon,data,data_mask,png_file,dataset,**plot_options):
 
         l1_plot_options = geocat_l1_data.Plot_Options.data[dataset]
 
@@ -224,6 +243,7 @@ class GOES_L1():
         LOG.debug('data_mask.shape = {}'.format(data_mask.shape))
         data = ma.array(data[::stride,::stride],mask=data_mask[::stride,::stride])
 
+        LOG.debug('plotLims = {},{}'.format(plotLims[0],plotLims[1]))
         vmin,vmax = plotLims[0],plotLims[-1]
 
         if doScatterPlot:
@@ -233,7 +253,7 @@ class GOES_L1():
             cs = m.pcolor(x,y,data,axes=ax,edgecolors='none',antialiased=False,
                     vmin=vmin,vmax=vmax,cmap=cmap)
 
-        txt = ax.set_title(title,fontsize=11)
+        #txt = ax.set_title(title,fontsize=11)
 
         ppl.setp(ax.get_xticklines(),visible=False)
         ppl.setp(ax.get_yticklines(),visible=False)
@@ -250,15 +270,15 @@ class GOES_L1():
         ppl.setp(cax.get_xticklines(),visible=False)
 
         # Colourbar title
-        #cbar_title = l1_plot_options['name']
         cax_title = ppl.setp(cax,title=cbar_title)
         ppl.setp(cax_title,fontsize=10)
 
         # Redraw the figure
         canvas.draw()
-        canvas.print_figure(pngName,dpi=dpi)
 
-        LOG.info("Writing image file {}".format(pngName))
+        # Write the figure to file
+        canvas.print_figure(png_file,dpi=dpi)
+        LOG.info("Writing image file {}".format(png_file))
 
 
 def _argparse():
@@ -635,7 +655,7 @@ def main():
 
     # Create the plot
     if unnavigated :
-        goes_l1_obj.plot_L1(data,output_file,dataset,**plot_options)
+        goes_l1_obj.plot_L1(data,data_mask,output_file,dataset,**plot_options)
     else :
         goes_l1_obj.plot_L1_Map(lats,lons,data,data_mask,output_file,dataset,**plot_options)
 

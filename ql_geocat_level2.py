@@ -104,7 +104,7 @@ class GOES_L2():
         self.file_obj.end()
 
 
-    def plot_L2(self,data,png_file,dataset,**plot_options):
+    def plot_L2(self,data,data_mask,png_file,dataset,**plot_options):
 
         l2_plot_options = geocat_l2_data.Plot_Options.data[dataset]
 
@@ -113,19 +113,14 @@ class GOES_L2():
         cbar_title    = plot_options['cbar_title']
         units         = plot_options['units']
         stride        = plot_options['stride']
-        lat_0         = plot_options['lat_0']
-        lon_0         = plot_options['lon_0']
         plotMin       = plot_options['plotMin']
         plotMax       = plot_options['plotMax']
         plotLims      = plot_options['plotLims']
-        map_res       = plot_options['map_res']
         cmap          = plot_options['cmap']
-        doScatterPlot = plot_options['scatterPlot']
-        pointSize     = plot_options['pointSize']
         dpi           = plot_options['dpi']
 
         '''
-        Plot the input dataset in mapped to particular projection
+        Plot the input dataset in in native data coordinates
         '''
 
         # If our data is all missing, return
@@ -141,7 +136,7 @@ class GOES_L2():
 
         # Create main axes instance, leaving room for colorbar at bottom,
         # and also get the Bbox of the axes instance
-        ax_rect = [0.05, 0.18, 0.9, 0.75  ] # [left,bottom,width,height]
+        ax_rect = [0.10, 0.15, 0.80, 0.8  ] # [left,bottom,width,height]
         ax = fig.add_axes(ax_rect,axis_bgcolor='lightgray')
 
         # Granule axis title
@@ -149,17 +144,23 @@ class GOES_L2():
         ppl.setp(ax_title,fontsize=12)
         ppl.setp(ax_title,family="sans-serif")
 
-        LOG.debug('plotLims = {},{}'.format(plotLims[0],plotLims[1]))
-        vmin,vmax = plotLims[0],plotLims[1]
+        LOG.debug('data.shape = {}'.format(data.shape))
+        LOG.debug('data_mask.shape = {}'.format(data_mask.shape))
+        data = ma.array(data[::stride,::stride],mask=data_mask[::stride,::stride])
 
-        im = ax.imshow(data,interpolation='nearest',vmin=vmin,vmax=vmax,cmap=cmap)
+        vmin,vmax = plotLims[0],plotLims[-1]
+
+        im = ax.imshow(data,interpolation='nearest',aspect='auto',vmin=vmin,vmax=vmax,cmap=cmap)
+
+        #txt = ax.set_title(title,fontsize=11)
+
         ppl.setp(ax.get_xticklabels(), visible=False)
         ppl.setp(ax.get_yticklabels(), visible=False)
         ppl.setp(ax.get_xticklines(),visible=False)
         ppl.setp(ax.get_yticklines(),visible=False)
 
         # add a colorbar axis
-        cax_rect = [0.05 , 0.05, 0.9 , 0.05 ] # [left,bottom,width,height]
+        cax_rect = [0.10 , 0.05, 0.8 , 0.05 ] # [left,bottom,width,height]
         cax = fig.add_axes(cax_rect,frameon=False) # setup colorbar axes
 
         # Plot the colorbar.
@@ -174,24 +175,35 @@ class GOES_L2():
         # Redraw the figure
         canvas.draw()
 
+        # Write the figure to file
         canvas.print_figure(png_file,dpi=dpi)
         LOG.info("Writing to {}...".format(png_file))
 
 
-    def plot_L2_discrete(self,data,png_file,dataset,**plot_options):
+    def plot_L2_discrete(self,data,data_mask,png_file,dataset,**plot_options):
 
-        import geocat_l2_data
-        CMD = geocat_l2_data.CloudMaskData
+        l2_plot_options = geocat_l2_data.Plot_Options.data[dataset]
 
         # Copy the plot options to local variables
         title         = plot_options['title']
         cbar_title    = plot_options['cbar_title']
         units         = plot_options['units']
+        stride        = plot_options['stride']
         plotMin       = plot_options['plotMin']
         plotMax       = plot_options['plotMax']
         plotLims      = plot_options['plotLims']
         cmap          = plot_options['cmap']
         dpi           = plot_options['dpi']
+
+        '''
+        Plot the input dataset in in native data coordinates
+        '''
+
+        # If our data is all missing, return
+        if (np.sum(data_mask) == data.size):
+            LOG.warn("Entire {} dataset is missing, aborting".\
+                    format(dataset))
+            return -1
 
         # Create figure with default size, and create canvas to draw on
         scale=1.5
@@ -200,7 +212,7 @@ class GOES_L2():
 
         # Create main axes instance, leaving room for colorbar at bottom,
         # and also get the Bbox of the axes instance
-        ax_rect = [0.05, 0.18, 0.9, 0.75  ] # [left,bottom,width,height]
+        ax_rect = [0.10, 0.15, 0.80, 0.8  ] # [left,bottom,width,height]
         ax = fig.add_axes(ax_rect,axis_bgcolor='lightgray')
 
         # Granule axis title
@@ -208,8 +220,7 @@ class GOES_L2():
         ppl.setp(ax_title,fontsize=12)
         ppl.setp(ax_title,family="sans-serif")
 
-
-        fill_colours = CMD.data[dataset]['fill_colours']
+        fill_colours = l2_plot_options['fill_colours']
         cmap = ListedColormap(fill_colours)
 
         numCats = np.array(fill_colours).size
@@ -218,32 +229,24 @@ class GOES_L2():
         tickPos = np.arange(float(numBounds))/float(numCats)
         tickPos = tickPos[0 :-1] + tickPos[1]/2.
 
-        # Create figure with default size, and create canvas to draw on
-        scale=1.5
-        fig = Figure(figsize=(scale*5,scale*5))
-        canvas = FigureCanvas(fig)
+        LOG.debug('data.shape = {}'.format(data.shape))
+        LOG.debug('data_mask.shape = {}'.format(data_mask.shape))
+        data = ma.array(data[::stride,::stride],mask=data_mask[::stride,::stride])
 
-        # Create main axes instance, leaving room for colorbar at bottom,
-        # and also get the Bbox of the axes instance
-        ax_rect = [0.05, 0.18, 0.9, 0.75  ] # [left,bottom,width,height]
-        ax = fig.add_axes(ax_rect,axis_bgcolor='lightgray')
-
-        # Granule axis title
-        ax_title = ppl.setp(ax,title=title)
-        ppl.setp(ax_title,fontsize=12)
-        ppl.setp(ax_title,family="sans-serif")
-
-        data_values = CMD.data[dataset]['values']
+        data_values = l2_plot_options['values']
         vmin,vmax = data_values[0],data_values[-1]
 
-        im = ax.imshow(data,interpolation='nearest',vmin=vmin,vmax=vmax,cmap=cmap)
+        im = ax.imshow(data,interpolation='nearest',aspect='auto',vmin=vmin,vmax=vmax,cmap=cmap)
+
+        #txt = ax.set_title(title,fontsize=11)
+
         ppl.setp(ax.get_xticklabels(), visible=False)
         ppl.setp(ax.get_yticklabels(), visible=False)
         ppl.setp(ax.get_xticklines(),visible=False)
         ppl.setp(ax.get_yticklines(),visible=False)
 
         # add a colorbar axis
-        cax_rect = [0.05 , 0.05, 0.9 , 0.05 ] # [left,bottom,width,height]
+        cax_rect = [0.10 , 0.05, 0.8 , 0.05 ] # [left,bottom,width,height]
         cax = fig.add_axes(cax_rect,frameon=False) # setup colorbar axes
 
         # Plot the colorbar.
@@ -255,17 +258,18 @@ class GOES_L2():
         #ppl.setp(cb.ax,xticks=CMD.ViirsCMTickPos) # In colorbar axis coords (0..1)
         tickpos_data_coords = vmax*tickPos
         cb.set_ticks(tickpos_data_coords) # In data coords (0..3)
-        tick_names = CMD.data[dataset]['tick_names']
+        tick_names = l2_plot_options['tick_names']
         ppl.setp(cb.ax,xticklabels=tick_names)
 
         # Colourbar title
-        title = CMD.data[dataset]['name']
-        cax_title = ppl.setp(cax,title=title)
+        cbar_title = l2_plot_options['name']
+        cax_title = ppl.setp(cax,title=cbar_title)
         ppl.setp(cax_title,fontsize=10)
 
         # Redraw the figure
         canvas.draw()
 
+        # Write the figure to file
         canvas.print_figure(png_file,dpi=dpi)
         LOG.info("Writing to {}...".format(png_file))
 
@@ -344,7 +348,7 @@ class GOES_L2():
             cs = m.pcolor(x,y,data,axes=ax,edgecolors='none',antialiased=False,
                     vmin=vmin,vmax=vmax,cmap=cmap)
 
-        txt = ax.set_title(title,fontsize=11)
+        #txt = ax.set_title(title,fontsize=11)
 
         ppl.setp(ax.get_xticklines(),visible=False)
         ppl.setp(ax.get_yticklines(),visible=False)
@@ -361,14 +365,14 @@ class GOES_L2():
         ppl.setp(cax.get_xticklines(),visible=False)
 
         # Colourbar title
-        #cbar_title = l2_plot_options['name']
         cax_title = ppl.setp(cax,title=cbar_title)
         ppl.setp(cax_title,fontsize=10)
 
         # Redraw the figure
         canvas.draw()
-        canvas.print_figure(pngName,dpi=dpi)
 
+        # Write the figure to file
+        canvas.print_figure(pngName,dpi=dpi)
         LOG.info("Writing image file {}".format(pngName))
 
 
@@ -399,7 +403,7 @@ class GOES_L2():
         # If our data is all missing, return
         if (np.sum(data_mask) == data.size):
             LOG.warn("Entire {} dataset is missing, aborting".\
-                    format(cbar_title))
+                    format(dataset))
             return -1
 
         # Create figure with default size, and create canvas to draw on
@@ -456,7 +460,7 @@ class GOES_L2():
             cs = m.pcolor(x,y,data,axes=ax,edgecolors='none',antialiased=False,
                     vmin=vmin,vmax=vmax,cmap=cmap)
 
-        txt = ax.set_title(title,fontsize=11)
+        #txt = ax.set_title(title,fontsize=11)
 
         ppl.setp(ax.get_xticklines(),visible=False)
         ppl.setp(ax.get_yticklines(),visible=False)
@@ -486,8 +490,9 @@ class GOES_L2():
 
         # Redraw the figure
         canvas.draw()
-        canvas.print_figure(pngName,dpi=dpi)
 
+        # Write the figure to file
+        canvas.print_figure(pngName,dpi=dpi)
         LOG.info("Writing image file {}".format(pngName))
 
 
@@ -901,9 +906,9 @@ def main():
     # Create the plot
     if unnavigated :
         if is_l2_discrete :
-            goes_l2_obj.plot_L2_discrete(data,output_file,dataset,**plot_options)
+            goes_l2_obj.plot_L2_discrete(data,data_mask,output_file,dataset,**plot_options)
         else :
-            goes_l2_obj.plot_L2(data,output_file,dataset,**plot_options)
+            goes_l2_obj.plot_L2(data,data_mask,output_file,dataset,**plot_options)
     else :
         if is_l2_discrete :
             goes_l2_obj.plot_L2_Map_discrete(lats,lons,data,data_mask,output_file,dataset,**plot_options)

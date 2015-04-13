@@ -89,7 +89,7 @@ class Plot_Options:
                 'n_levels':256
                 }
     data['ACHA_mode_7_goes_cloud_particle_effective_radius'] = {
-                'name':'ACHA_mode_7_goes_cloud_particle_effective_radius',
+                'name':'ACHA_mode_7_goes_cloud_particle_effective_radius ($\mu\mathrm{m}$)',
                 'discrete':False,
                 'values':[0.,40.],
                 'coastline_color':'white',
@@ -98,7 +98,7 @@ class Plot_Options:
                 'n_levels':256
                 }
     data['ACHA_mode_7_goes_cloud_top_height'] = {
-                'name':'ACHA_mode_7_goes_cloud_top_height',
+                'name':'ACHA_mode_7_goes_cloud_top_height ($\mathrm{m}$)',
                 'discrete':False,
                 'values':[0.,17000.],
                 'coastline_color':'white',
@@ -107,7 +107,7 @@ class Plot_Options:
                 'n_levels':256
                 }
     data['ACHA_mode_7_goes_cloud_top_pressure'] = {
-                'name':'ACHA_mode_7_goes_cloud_top_pressure',
+                'name':'ACHA_mode_7_goes_cloud_top_pressure ($\mathrm{hPa}$)',
                 'discrete':False,
                 'values':[0.,1100.],
                 'coastline_color':'white',
@@ -116,7 +116,7 @@ class Plot_Options:
                 'n_levels':256
                 }
     data['ACHA_mode_7_goes_cloud_top_temperature'] = {
-                'name':'ACHA_mode_7_goes_cloud_top_temperature',
+                'name':'ACHA_mode_7_goes_cloud_top_temperature ($\mathrm{K}$)',
                 'discrete':False,
                 'values':[180.,295.],
                 'coastline_color':'white',
@@ -134,7 +134,7 @@ class Plot_Options:
                 'n_levels':256
                 }
     data['DCOMP_mode_3_cloud_ice_water_path'] = {
-                'name':'DCOMP_mode_3_cloud_ice_water_path',
+                'name':'DCOMP_mode_3_cloud_ice_water_path ($\mathrm{g m}^{2}$)',
                 'discrete':False,
                 'values':[0.,1.],
                 'coastline_color':'white',
@@ -143,7 +143,7 @@ class Plot_Options:
                 'n_levels':256
                 }
     data['DCOMP_mode_3_cloud_liquid_water_path'] = {
-                'name':'DCOMP_mode_3_cloud_liquid_water_path',
+                'name':'DCOMP_mode_3_cloud_liquid_water_path ($\mathrm{g m}^{2}$)',
                 'discrete':False,
                 'values':[0.,1.],
                 'coastline_color':'white',
@@ -161,7 +161,7 @@ class Plot_Options:
                 'n_levels':256
                 }
     data['DCOMP_mode_3_cloud_particle_effective_radius'] = {
-                'name':'DCOMP_mode_3_cloud_particle_effective_radius',
+                'name':'DCOMP_mode_3_cloud_particle_effective_radius ($\mu\mathrm{m}$)',
                 'discrete':False,
                 'values':[0.,40.],
                 'coastline_color':'white',
@@ -170,7 +170,7 @@ class Plot_Options:
                 'n_levels':256
                 }
     data['goesr_fog_IFR_fog_probability'] = {
-                'name':'goesr_fog_IFR_fog_probability',
+                'name':'goesr_fog_IFR_fog_probability (%)',
                 'discrete':False,
                 'values':[0.,100.],
                 'coastline_color':'white',
@@ -179,7 +179,7 @@ class Plot_Options:
                 'n_levels':256
                 }
     data['goesr_fog_LIFR_fog_probability'] = {
-                'name':'goesr_fog_LIFR_fog_probability',
+                'name':'goesr_fog_LIFR_fog_probability (%)',
                 'discrete':False,
                 'values':[0.,100.],
                 'coastline_color':'white',
@@ -188,7 +188,7 @@ class Plot_Options:
                 'n_levels':256
                 }
     data['goesr_fog_MVFR_fog_probability'] = {
-                'name':'goesr_fog_MVFR_fog_probability',
+                'name':'goesr_fog_MVFR_fog_probability (%)',
                 'discrete':False,
                 'values':[0.,100.],
                 'coastline_color':'white',
