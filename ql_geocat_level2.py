@@ -311,7 +311,7 @@ class GOES_L2():
 
         # Create main axes instance, leaving room for colorbar at bottom,
         # and also get the Bbox of the axes instance
-        ax_rect = [0.05, 0.15, 0.9, 0.8  ] # [left,bottom,width,height]
+        ax_rect = [0.10, 0.15, 0.80, 0.8  ] # [left,bottom,width,height]
         ax = fig.add_axes(ax_rect,axis_bgcolor='lightgray')
 
         # Granule axis title
@@ -356,7 +356,7 @@ class GOES_L2():
         ppl.setp(ax.get_yticklabels(), visible=False)
 
         # add a colorbar axis
-        cax_rect = [0.05 , 0.05, 0.9 , 0.05 ] # [left,bottom,width,height]
+        cax_rect = [0.10 , 0.05, 0.8 , 0.05 ] # [left,bottom,width,height]
         cax = fig.add_axes(cax_rect,frameon=False) # setup colorbar axes
 
         # Plot the colorbar.
@@ -413,7 +413,7 @@ class GOES_L2():
 
         # Create main axes instance, leaving room for colorbar at bottom,
         # and also get the Bbox of the axes instance
-        ax_rect = [0.05, 0.15, 0.9, 0.8  ] # [left,bottom,width,height]
+        ax_rect = [0.10, 0.15, 0.80, 0.8  ] # [left,bottom,width,height]
         ax = fig.add_axes(ax_rect,axis_bgcolor='lightgray')
 
         # Granule axis title
@@ -468,7 +468,7 @@ class GOES_L2():
         ppl.setp(ax.get_yticklabels(), visible=False)
 
         # add a colorbar axis
-        cax_rect = [0.05 , 0.05, 0.9 , 0.05 ] # [left,bottom,width,height]
+        cax_rect = [0.10 , 0.05, 0.8 , 0.05 ] # [left,bottom,width,height]
         cax = fig.add_axes(cax_rect,frameon=False) # setup colorbar axes
 
         # Plot the colorbar.
