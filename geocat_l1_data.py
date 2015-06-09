@@ -134,6 +134,13 @@ class Plot_Options:
                 'n_levels':256
                 }
 
+    data['imager_channel_1_reflectance'] = data['channel_2_reflectance']
+    data['imager_channel_2_brightness_temperature'] = data['channel_7_brightness_temperature']
+    data['imager_channel_2_emissivity'] = data['channel_7_emissivity']
+    data['imager_channel_2_reflectance'] = data['channel_7_reflectance']
+    data['imager_channel_3_brightness_temperature'] = data['channel_9_brightness_temperature']
+    data['imager_channel_4_brightness_temperature'] = data['channel_14_brightness_temperature']
+    data['imager_channel_6_brightness_temperature'] = data['channel_16_brightness_temperature']
 
     data['pixel_ecosystem_type'] = {
                 'name':'pixel_ecosystem_type',

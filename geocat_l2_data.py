@@ -48,6 +48,8 @@ class Plot_Options:
             'coastline_color':'black',
             'country_color':'black'
             }
+    data['baseline_cmask_seviri_cloud_mask'] = data['baseline_cmask_goes_nop_cloud_mask']
+
     data['goesnp_ctype_cloud_phase'] = {
             'name':'Cloud Phase',
             'discrete':True,
@@ -136,7 +138,7 @@ class Plot_Options:
     data['DCOMP_mode_3_cloud_ice_water_path'] = {
                 'name':'DCOMP_mode_3_cloud_ice_water_path ($\mathrm{g m}^{2}$)',
                 'discrete':False,
-                'values':[0.,1.],
+                'values':[None,None],
                 'coastline_color':'white',
                 'country_color':'white',
                 'cmap':g2_cmaps.geocat_colormaps.get_cmap_ice_water(),
@@ -145,7 +147,7 @@ class Plot_Options:
     data['DCOMP_mode_3_cloud_liquid_water_path'] = {
                 'name':'DCOMP_mode_3_cloud_liquid_water_path ($\mathrm{g m}^{2}$)',
                 'discrete':False,
-                'values':[0.,1.],
+                'values':[None,None],
                 'coastline_color':'white',
                 'country_color':'white',
                 'cmap':g2_cmaps.geocat_colormaps.get_cmap_ice_water(),
@@ -154,7 +156,7 @@ class Plot_Options:
     data['DCOMP_mode_3_cloud_optical_depth_vis'] = {
                 'name':'DCOMP_mode_3_cloud_optical_depth_vis',
                 'discrete':False,
-                'values':[0.,15.],
+                'values':[None,None],
                 'coastline_color':'white',
                 'country_color':'white',
                 'cmap':g2_cmaps.geocat_colormaps.get_cmap_ice_water(),
@@ -163,7 +165,7 @@ class Plot_Options:
     data['DCOMP_mode_3_cloud_particle_effective_radius'] = {
                 'name':'DCOMP_mode_3_cloud_particle_effective_radius ($\mu\mathrm{m}$)',
                 'discrete':False,
-                'values':[0.,40.],
+                'values':[None,None],
                 'coastline_color':'white',
                 'country_color':'white',
                 'cmap':g2_cmaps.geocat_colormaps.get_cmap_ice_water(),

@@ -69,6 +69,8 @@ import matplotlib.pyplot as ppl
 from mpl_toolkits.basemap import Basemap
 
 from pyhdf.SD import SD
+from netCDF4 import Dataset
+from netCDF4 import num2date
 
 import geocat_l1_data
 
@@ -79,28 +81,7 @@ LOG = logging.getLogger(__file__)
 class GOES_L1():
 
     def __init__(self,l1_file):
-
-        self.l1_file = l1_file
-        self.file_obj = SD(l1_file)
-        self.attrs = self.file_obj.attributes()
-        self.data_dict = self.file_obj.datasets()
-        self.datanames = self.data_dict.keys()
-        self.datanames.sort()
-
-
-    class Dataset():
-
-        def __init__(selfd,L2_obj,dataname):
-
-            selfd.dataname = dataname
-            selfd.dset_obj = L2_obj.file_obj.select(dataname)
-            selfd.attrs = selfd.dset_obj.attributes()
-            selfd.dset = ma.masked_equal(selfd.dset_obj.get(),selfd.attrs['_FillValue'])
-            selfd.dset = selfd.dset * selfd.attrs['scale_factor'] + selfd.attrs['add_offset']
-
-
-    def close(self):
-        self.file_obj.end()
+        pass
 
 
     def plot_L1(self,data,data_mask,png_file,dataset,**plot_options):
@@ -281,6 +262,90 @@ class GOES_L1():
         LOG.info("Writing image file {}".format(png_file))
 
 
+class GOES_HDF4(GOES_L1):
+
+    def __init__(self,l1_file):
+
+
+        self.l1_file = l1_file
+
+        LOG.debug('Opening {} with GOES_HDF4...'.format(self.l1_file))
+        self.file_obj = SD(self.l1_file)
+        
+        # Dictionary of file object attributes
+        self.attrs = self.file_obj.attributes()
+
+        # Dictionary of dataset shape and type attributes
+        self.data_dict = self.file_obj.datasets()
+
+        # List of dataset names
+        self.datanames = self.data_dict.keys()
+        self.datanames.sort()
+
+
+    class Dataset():
+
+        def __init__(selfd,L1_obj,dataname):
+
+            selfd.dataname = dataname
+
+            selfd.dset_obj = L1_obj.file_obj.select(dataname)
+
+            selfd.attrs = selfd.dset_obj.attributes()
+            selfd.dset = ma.masked_equal(selfd.dset_obj.get(),selfd.attrs['_FillValue'])
+            
+            selfd.dset = selfd.dset * selfd.attrs['scale_factor'] + selfd.attrs['add_offset']
+
+    def close(self):
+        LOG.debug('Closing {}...'.format(self.l1_file))
+        self.file_obj.end()
+
+
+class GOES_NetCDF(GOES_L1):
+
+    def __init__(self,l1_file):
+
+
+        self.l1_file = l1_file
+
+        LOG.debug('Opening {} with GOES_NetCDF...'.format(self.l1_file))
+        self.file_obj = Dataset(self.l1_file)
+
+        # Dictionary of file object attributes
+        self.attrs = {}
+        for attr_key in self.file_obj.ncattrs():
+            self.attrs[attr_key] = getattr(self.file_obj,attr_key)
+        
+        # Ordered dictionary of dataset objects
+        self.data_dict = self.file_obj.variables
+
+        # List of dataset names
+        self.datanames = self.data_dict.keys()
+        self.datanames.sort()
+
+
+    class Dataset():
+
+        def __init__(selfd,L1_obj,dataname):
+
+            selfd.dataname = dataname
+
+            selfd.dset_obj = L1_obj.file_obj.variables[dataname]
+
+            selfd.attrs = {}
+            for attr_key in selfd.dset_obj.ncattrs():
+                selfd.attrs[attr_key] = getattr(selfd.dset_obj,attr_key)
+            
+            selfd.dset = ma.masked_equal(selfd.dset_obj[:],selfd.attrs['_FillValue'])
+            #selfd.dset = selfd.dset * selfd.attrs['scale_factor'] + selfd.attrs['add_offset']
+
+    def close(self):
+        LOG.debug('Closing {}...'.format(self.l1_file))
+        self.file_obj.close()
+
+
+
+
 def _argparse():
     '''
     Method to encapsulate the option parsing and various setup tasks.
@@ -317,6 +382,7 @@ def _argparse():
                 'plotMax'  : None,
                 'scatter_plot':False,
                 'unnavigated':False,
+                'instr_native_chans':False,
                 'list_datasets':False,
                 'pointSize':1,
                 'map_res':'c',
@@ -447,6 +513,14 @@ def _argparse():
                       help="Do not navigate the data, just display the image."
                       )
 
+    parser.add_argument('--instr_native_chans',
+                      action="store_true",
+                      dest="instr_native_chans",
+                      default=defaults["instr_native_chans"],
+                      help='''The channel names are instrument native, as opposed 
+                      to "geocat" native. [default: {}]'''.format(defaults["pointSize"])
+                      )
+
     parser.add_argument('--list_datasets',
                       action="store_true",
                       dest="list_datasets",
@@ -563,8 +637,8 @@ def main():
     dpi = options.dpi
 
     # Create and populate the GOES-L1 object
-
-    goes_l1_obj = GOES_L1(input_file)
+    #goes_l1_obj = GOES_HDF4(input_file)
+    goes_l1_obj = GOES_NetCDF(input_file)
 
     lats = goes_l1_obj.Dataset(goes_l1_obj,'pixel_latitude').dset
     lons = goes_l1_obj.Dataset(goes_l1_obj,'pixel_longitude').dset
@@ -579,12 +653,16 @@ def main():
         sys.exit(1)
 
     # Read in the desired dataset
+    LOG.info('dataset: {}'.format(dataset))
     try:
+
+        LOG.info('dataset name: {}'.format(dataset))
+
         data_obj = goes_l1_obj.Dataset(goes_l1_obj,dataset)
     except :
         LOG.error('"{}" is not a valid dataset in {}, aborting.'.format(dataset,input_file))
         goes_l1_obj.close()
-        sys.exit(1)
+        return 1
 
     LOG.info('Subsatellite_Longitude = {}'.format(goes_l1_obj.attrs['Subsatellite_Longitude']))
     lon_0 = goes_l1_obj.attrs['Subsatellite_Longitude'] if lon_0==None else lon_0
@@ -608,7 +686,6 @@ def main():
 
     goes_l1_obj.close()
     
-
     # Determine the filename
     file_suffix = "{}".format(dataset)
 
@@ -620,6 +697,13 @@ def main():
         output_file = "{}_{}.png".format(outputFilePrefix,file_suffix)
     if output_file!=None and outputFilePrefix!=None :
         output_file = "{}_{}.png".format(outputFilePrefix,file_suffix)
+
+    # Determine the correct key for the channel name...
+    chan_convention = goes_l1_obj.attrs['Channel_Number_Convention']
+    if 'instrument-native' in chan_convention:
+        spacecraft = goes_l1_obj.attrs['Spacecraft_Name']
+        dataset_prefix = "{}_".format(string.replace(spacecraft.lower(),'-','_'))
+        dataset = string.replace(dataset,dataset_prefix,"")
 
     l1_plot_options = geocat_l1_data.Plot_Options.data[dataset]
 

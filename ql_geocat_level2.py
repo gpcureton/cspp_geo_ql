@@ -69,6 +69,8 @@ import matplotlib.pyplot as ppl
 from mpl_toolkits.basemap import Basemap
 
 from pyhdf.SD import SD
+from netCDF4 import Dataset
+from netCDF4 import num2date
 
 import geocat_l2_data
 
@@ -80,28 +82,29 @@ class GOES_L2():
 
     def __init__(self,l2_file):
 
-        self.l2_file = l2_file
-        self.file_obj = SD(l2_file)
-        self.attrs = self.file_obj.attributes()
-        self.data_dict = self.file_obj.datasets()
-        self.datanames = self.data_dict.keys()
-        self.datanames.sort()
+        pass
+        #self.l2_file = l2_file
+        #self.file_obj = SD(l2_file)
+        #self.attrs = self.file_obj.attributes()
+        #self.data_dict = self.file_obj.datasets()
+        #self.datanames = self.data_dict.keys()
+        #self.datanames.sort()
 
 
-    class Dataset():
+    #class Dataset():
 
-        def __init__(selfd,L2_obj,dataname):
+        #def __init__(selfd,L2_obj,dataname):
 
-            selfd.dataname = dataname
-            selfd.dset_obj = L2_obj.file_obj.select(dataname)
-            selfd.attrs = selfd.dset_obj.attributes()
-            selfd.dset = ma.masked_equal(selfd.dset_obj.get(),selfd.attrs['_FillValue'])
-            selfd.dset = selfd.dset * selfd.attrs['scale_factor'] + selfd.attrs['add_offset']
+            #selfd.dataname = dataname
+            #selfd.dset_obj = L2_obj.file_obj.select(dataname)
+            #selfd.attrs = selfd.dset_obj.attributes()
+            #selfd.dset = ma.masked_equal(selfd.dset_obj.get(),selfd.attrs['_FillValue'])
+            #selfd.dset = selfd.dset * selfd.attrs['scale_factor'] + selfd.attrs['add_offset']
 
 
-    def close(self):
-        LOG.info('Closing the file {}'.format(self.l2_file))
-        self.file_obj.end()
+    #def close(self):
+        #LOG.info('Closing the file {}'.format(self.l2_file))
+        #self.file_obj.end()
 
 
     def plot_L2(self,data,data_mask,png_file,dataset,**plot_options):
@@ -496,6 +499,87 @@ class GOES_L2():
         LOG.info("Writing image file {}".format(pngName))
 
 
+class GOES_HDF4(GOES_L2):
+
+    def __init__(self,l2_file):
+
+
+        self.l2_file = l2_file
+
+        LOG.debug('Opening {} with GOES_HDF4...'.format(self.l2_file))
+        self.file_obj = SD(self.l2_file)
+        
+        # Dictionary of file object attributes
+        self.attrs = self.file_obj.attributes()
+
+        # Dictionary of dataset shape and type attributes
+        self.data_dict = self.file_obj.datasets()
+
+        # List of dataset names
+        self.datanames = self.data_dict.keys()
+        self.datanames.sort()
+
+
+    class Dataset():
+
+        def __init__(selfd,L1_obj,dataname):
+
+            selfd.dataname = dataname
+
+            selfd.dset_obj = L1_obj.file_obj.select(dataname)
+
+            selfd.attrs = selfd.dset_obj.attributes()
+            selfd.dset = ma.masked_equal(selfd.dset_obj.get(),selfd.attrs['_FillValue'])
+            
+            selfd.dset = selfd.dset * selfd.attrs['scale_factor'] + selfd.attrs['add_offset']
+
+    def close(self):
+        LOG.debug('Closing {}...'.format(self.l2_file))
+        self.file_obj.end()
+
+
+class GOES_NetCDF(GOES_L2):
+
+    def __init__(self,l2_file):
+
+
+        self.l2_file = l2_file
+
+        LOG.debug('Opening {} with GOES_NetCDF...'.format(self.l2_file))
+        self.file_obj = Dataset(self.l2_file)
+
+        # Dictionary of file object attributes
+        self.attrs = {}
+        for attr_key in self.file_obj.ncattrs():
+            self.attrs[attr_key] = getattr(self.file_obj,attr_key)
+        
+        # Ordered dictionary of dataset objects
+        self.data_dict = self.file_obj.variables
+
+        # List of dataset names
+        self.datanames = self.data_dict.keys()
+        self.datanames.sort()
+
+
+    class Dataset():
+
+        def __init__(selfd,L1_obj,dataname):
+
+            selfd.dataname = dataname
+
+            selfd.dset_obj = L1_obj.file_obj.variables[dataname]
+
+            selfd.attrs = {}
+            for attr_key in selfd.dset_obj.ncattrs():
+                selfd.attrs[attr_key] = getattr(selfd.dset_obj,attr_key)
+            
+            selfd.dset = ma.masked_equal(selfd.dset_obj[:],selfd.attrs['_FillValue'])
+            #selfd.dset = selfd.dset * selfd.attrs['scale_factor'] + selfd.attrs['add_offset']
+
+    def close(self):
+        LOG.debug('Closing {}...'.format(self.l2_file))
+        self.file_obj.close()
+
 def _argparse():
     '''
     Method to encapsulate the option parsing and various setup tasks.
@@ -811,8 +895,8 @@ def main():
     dpi = options.dpi
 
     # Create and populate the GOES-L2 object
-
-    goes_l2_obj = GOES_L2(input_file)
+    #goes_l2_obj = GOES_HDF4(input_file)
+    goes_l2_obj = GOES_NetCDF(input_file)
 
     lats = goes_l2_obj.Dataset(goes_l2_obj,'pixel_latitude').dset
     lons = goes_l2_obj.Dataset(goes_l2_obj,'pixel_longitude').dset
@@ -832,7 +916,7 @@ def main():
     except :
         LOG.error('"{}" is not a valid dataset in {}, aborting.'.format(dataset,input_file))
         goes_l2_obj.close()
-        sys.exit(1)
+        return 1
 
     LOG.info('Subsatellite_Longitude = {}'.format(goes_l2_obj.attrs['Subsatellite_Longitude']))
     lon_0 = goes_l2_obj.attrs['Subsatellite_Longitude'] if lon_0==None else lon_0
