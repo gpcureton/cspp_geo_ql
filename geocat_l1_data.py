@@ -28,7 +28,7 @@ import time
 from matplotlib import cm as cm
 import geocat_colormaps as g1_cmaps
 
-class Plot_Options:
+class Dataset_Options:
     """
     This class contains static data for the interpretation of the various  
     geocat discrete and continuous datasets.
@@ -74,8 +74,11 @@ class Plot_Options:
                 'name':'channel_2_reflectance',
                 'discrete':False,
                 'values':[0.,100.],
-                'coastline_color':'white',
-                'country_color':'white',
+                #'coastline_color':'white',
+                'coastline_color':'cyan',
+                #'country_color':'white',
+                'country_color':'magenta',
+                'meridian_color':'yellow',
                 'cmap':cm.gray,
                 'n_levels':256
                 }
@@ -205,3 +208,60 @@ class Plot_Options:
                 'cmap':g1_cmaps.geocat_colormaps.get_cmap_ice_water(),
                 'n_levels':256
                 }
+
+    navigation = {}
+
+    navigation['goes_e'] = {
+            'Subsatellite_Longitude': -75.,
+            'FD':{
+                'extent':{'ew':0.3036872 , 'ns':0.3036872},
+                'offset':{'ew':0.        , 'ns':0.}
+            },
+            'CONUS':{
+                'extent':{'ew':0.14        , 'ns':0.084},
+                'offset':{'ew':-0.040248647, 'ns':0.084625052}
+            },
+            'MESO':{
+                'extent':{'ew':0.028     , 'ns':0.028},
+                'offset':{'ew':None      , 'ns':None}
+            }
+
+            #'extent':{
+                #'FD'   : {'ew':0.3036872 , 'ns':0.3036872},
+                #'CONUS': {'ew':0.14      , 'ns':0.084},
+                #'MESO' : {'ew':0.028     , 'ns':0.028}
+            #},
+            #'img_center_offset':{
+                #'FD'   : {'ew':0.          , 'ns':0.},
+                #'CONUS': {'ew':-0.040248647, 'ns':0.084625052},
+                #'MESO' : {'ew':None        , 'ns':None}
+            #}
+    }
+
+    navigation['goes_w'] = {
+            'Subsatellite_Longitude': -137.,
+            'FD':{
+                'extent':{'ew':0.3036872 , 'ns':0.3036872},
+                'offset':{'ew':0.        , 'ns':0.}
+            },
+            'CONUS':{
+                'extent':{'ew':0.14        , 'ns':0.084},
+                'offset':{'ew':0.082900064, 'ns':0.083759424}
+            },
+            'MESO':{
+                'extent':{'ew':0.028     , 'ns':0.028},
+                'offset':{'ew':None      , 'ns':None}
+            }
+
+
+            #'extent':{
+                #'FD'   : {'ew':0.3036872 , 'ns':0.3036872},
+                #'CONUS': {'ew':0.14      , 'ns':0.084},
+                #'MESO' : {'ew':0.028     , 'ns':0.028}
+            #},
+            #'img_center_offset':{
+                #'FD'   : {'ew':0.         , 'ns':0.},
+                #'CONUS': {'ew':0.082900064, 'ns':0.083759424},
+                #'MESO' : {'ew':None       , 'ns':None}
+            #}
+    }
