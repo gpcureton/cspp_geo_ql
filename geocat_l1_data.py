@@ -71,69 +71,87 @@ class Dataset_Options:
     data = {}
 
     data['channel_2_reflectance'] = {
-                'name':'channel_2_reflectance',
+                'name':'Channel 2 reflectance',
+                'quantity':'reflectance',
                 'discrete':False,
                 'values':[0.,100.],
-                #'coastline_color':'white',
+                'units': '%',
                 'coastline_color':'cyan',
-                #'country_color':'white',
                 'country_color':'magenta',
                 'meridian_color':'yellow',
                 'cmap':cm.gray,
                 'n_levels':256
                 }
     data['channel_7_reflectance'] = {
-                'name':'channel_7_reflectance',
+                'name':'Channel 7 reflectance',
+                'quantity':'reflectance',
                 'discrete':False,
-                'values':[0.,100.],
-                'coastline_color':'white',
-                'country_color':'white',
+                'values':[0.,75.],
+                'units': '%',
+                'coastline_color':'cyan',
+                'country_color':'magenta',
+                'meridian_color':'yellow',
                 'cmap':cm.gray,
                 'n_levels':256
                 }
     data['channel_7_emissivity'] = {
-                'name':'channel_7_emissivity',
+                'name':'Channel 7 emissivity',
+                'quantity':'emissivity',
                 'discrete':False,
-                'values':[0.,100.],
-                'coastline_color':'black',
-                'country_color':'black',
-                'cmap':g1_cmaps.geocat_colormaps.get_cmap_ice_water(),
+                'values':[0.,30.],
+                'units': '%',
+                'coastline_color':'cyan',
+                'country_color':'magenta',
+                'meridian_color':'yellow',
+                'cmap':cm.gray,
                 'n_levels':256
                 }
     data['channel_7_brightness_temperature'] = {
-                'name':'channel_7_brightness_temperature',
+                'name':'Channel 7 brightness temperature',
+                'quantity':'brightness temperature',
                 'discrete':False,
                 'values':[None,None],
-                'coastline_color':'black',
-                'country_color':'black',
-                'cmap':g1_cmaps.geocat_colormaps.get_cmap_ice_water(),
+                'units': 'K',
+                'coastline_color':'cyan',
+                'country_color':'magenta',
+                'meridian_color':'yellow',
+                'cmap':cm.gray_r,
                 'n_levels':256
                 }
     data['channel_9_brightness_temperature'] = {
-                'name':'channel_9_brightness_temperature',
+                'name':'Channel 9 brightness temperature',
+                'quantity':'brightness temperature',
                 'discrete':False,
                 'values':[None,None],
-                'coastline_color':'black',
-                'country_color':'black',
-                'cmap':g1_cmaps.geocat_colormaps.get_cmap_ice_water(),
+                'units': 'K',
+                'coastline_color':'cyan',
+                'country_color':'magenta',
+                'meridian_color':'yellow',
+                'cmap':cm.gray_r,
                 'n_levels':256
                 }
     data['channel_14_brightness_temperature'] = {
-                'name':'channel_14_brightness_temperature',
+                'name':'Channel 14 brightness temperature',
+                'quantity':'brightness temperature',
                 'discrete':False,
                 'values':[None,None],
-                'coastline_color':'black',
-                'country_color':'black',
-                'cmap':g1_cmaps.geocat_colormaps.get_cmap_ice_water(),
+                'units': 'K',
+                'coastline_color':'cyan',
+                'country_color':'magenta',
+                'meridian_color':'yellow',
+                'cmap':cm.gray_r,
                 'n_levels':256
                 }
     data['channel_16_brightness_temperature'] = {
-                'name':'channel_16_brightness_temperature',
+                'name':'Channel 16 brightness temperature',
+                'quantity':'brightness temperature',
                 'discrete':False,
                 'values':[None,None],
-                'coastline_color':'black',
-                'country_color':'black',
-                'cmap':g1_cmaps.geocat_colormaps.get_cmap_ice_water(),
+                'units': 'K',
+                'coastline_color':'cyan',
+                'country_color':'magenta',
+                'meridian_color':'yellow',
+                'cmap':cm.gray_r,
                 'n_levels':256
                 }
 
@@ -145,66 +163,80 @@ class Dataset_Options:
     data['imager_channel_4_brightness_temperature'] = data['channel_14_brightness_temperature']
     data['imager_channel_6_brightness_temperature'] = data['channel_16_brightness_temperature']
 
+    for dsets in ['imager_channel_1_reflectance','imager_channel_2_brightness_temperature',
+            'imager_channel_2_emissivity','imager_channel_2_reflectance',
+            'imager_channel_3_brightness_temperature','imager_channel_4_brightness_temperature',
+            'imager_channel_6_brightness_temperature']:
+        data[dsets]['name'] = " ".join(dsets.split('_')[1:])
+
+
     data['pixel_ecosystem_type'] = {
-                'name':'pixel_ecosystem_type',
-                'discrete':False,
+                'name':'pixel ecosystem type',
+                'discrete':True,
                 'values':[None,None],
                 'coastline_color':'white',
                 'country_color':'white',
+                'meridian_color':'white',
                 'cmap':g1_cmaps.geocat_colormaps.get_cmap_ice_water(),
                 'n_levels':256
                 }
     data['pixel_latitude'] = {
-                'name':'pixel_latitude',
+                'name':'pixel latitude',
                 'discrete':False,
                 'values':[None,None],
                 'coastline_color':'white',
                 'country_color':'white',
+                'meridian_color':'white',
                 'cmap':g1_cmaps.geocat_colormaps.get_cmap_ice_water(),
                 'n_levels':256
                 }
     data['pixel_longitude'] = {
-                'name':'pixel_longitude',
+                'name':'pixel longitude',
                 'discrete':False,
                 'values':[None,None],
                 'coastline_color':'white',
                 'country_color':'white',
+                'meridian_color':'white',
                 'cmap':g1_cmaps.geocat_colormaps.get_cmap_ice_water(),
                 'n_levels':256
                 }
     data['pixel_relative_azimuth_angle'] = {
-                'name':'pixel_relative_azimuth_angle',
+                'name':'pixel relative azimuth angle',
                 'discrete':False,
                 'values':[None,None],
                 'coastline_color':'white',
                 'country_color':'white',
+                'meridian_color':'white',
                 'cmap':g1_cmaps.geocat_colormaps.get_cmap_ice_water(),
                 'n_levels':256
                 }
     data['pixel_satellite_zenith_angle'] = {
-                'name':'pixel_satellite_zenith_angle',
+                'name':'pixel satellite zenith angle',
                 'discrete':False,
                 'values':[None,None],
                 'coastline_color':'white',
                 'country_color':'white',
+                'meridian_color':'white',
                 'cmap':g1_cmaps.geocat_colormaps.get_cmap_ice_water(),
                 'n_levels':256
                 }
     data['pixel_solar_zenith_angle'] = {
-                'name':'pixel_solar_zenith_angle',
+                'name':'pixel solar zenith angle',
                 'discrete':False,
                 'values':[None,None],
                 'coastline_color':'white',
                 'country_color':'white',
+                'meridian_color':'white',
                 'cmap':g1_cmaps.geocat_colormaps.get_cmap_ice_water(),
                 'n_levels':256
                 }
     data['pixel_surface_type'] = {
-                'name':'pixel_surface_type',
-                'discrete':False,
+                'name':'pixel surface type',
+                'discrete':True,
                 'values':[None,None],
                 'coastline_color':'white',
                 'country_color':'white',
+                'meridian_color':'white',
                 'cmap':g1_cmaps.geocat_colormaps.get_cmap_ice_water(),
                 'n_levels':256
                 }
