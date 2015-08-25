@@ -73,6 +73,7 @@ from netCDF4 import Dataset
 from netCDF4 import num2date
 
 import geocat_l1_data
+from basemap_utils import drawparallels,drawmeridians
 
 # every module should have a LOG object
 LOG = logging.getLogger(__file__)
@@ -240,15 +241,18 @@ class GOES_L1():
         coastline_color = l1_dataset_options['coastline_color']
         country_color = l1_dataset_options['country_color']
         meridian_color = l1_dataset_options['meridian_color']
+        parallel_axes = plot_style_options['parallel_axes']
+        meridian_axes = plot_style_options['meridian_axes']
 
         m.drawcoastlines(ax=ax,color=coastline_color,linewidth = 0.3)
         m.drawcountries(ax=ax,color=country_color,linewidth = 0.2)
         m.drawstates(ax=ax,color=country_color,linewidth = 0.2)
         m.fillcontinents(color='0.',zorder=0)
-        m.drawparallels(np.arange( -90, 91,30), color = meridian_color, 
-                linewidth = 0.5,fontsize=9,labels=[0,0,0,0]) # left, right, top or bottom
-        m.drawmeridians(np.arange(-180,180,30), color = meridian_color, 
-                linewidth = 0.5,fontsize=9,labels=[0,0,0,0]) # left, right, top or bottom
+
+        drawparallels(m,np.arange( -90, 91,30), color = meridian_color, 
+                linewidth = 0.5,fontsize=6,labels=parallel_axes) # left, right, top or bottom
+        drawmeridians(m,np.arange(-180,180,30), color = meridian_color, 
+                linewidth = 0.5,fontsize=6,labels=meridian_axes) # left, right, top or bottom
 
         LOG.debug('data.shape = {}'.format(data.shape))
         LOG.debug('data_mask.shape = {}'.format(data_mask.shape))
@@ -564,11 +568,12 @@ def set_plot_navigation_bm(lats,lons,goes_l1_obj, options):
     plot_nav_options['urcrnry'] = plot_nav_options['urcrnry_map'] if options.viewport is None else options.viewport[3] * plot_nav_options['extent_y'] 
 
     plot_nav_options['lon_0'] = subsatellite_longitude
+    plot_nav_options['is_full_disk'] = is_full_disk
 
     return plot_nav_options
 
 
-def set_plot_styles(goes_l1_obj,data_obj, dataset, options):
+def set_plot_styles(goes_l1_obj,data_obj, dataset, options, plot_nav_options):
     """
     Collects the various plot formatting options and does any required tweaking
     before passing to the plotting method.
@@ -619,6 +624,14 @@ def set_plot_styles(goes_l1_obj,data_obj, dataset, options):
         except AttributeError:
             LOG.warning('Colormap {} does not exist, falling back to Spectral_r'.format(options.cmap))
             plot_style_options['cmap'] = getattr(cm,'Spectral_r')
+
+    # Set which axes parallels and meridians get labeled at...
+    if plot_nav_options['is_full_disk']:
+        plot_style_options['parallel_axes'] = [0,0,0,0]
+        plot_style_options['meridian_axes'] = [0,0,0,0]
+    else:
+        plot_style_options['parallel_axes'] = [1,0,0,0]
+        plot_style_options['meridian_axes'] = [0,0,0,1]
 
     return plot_style_options
 
@@ -992,8 +1005,6 @@ def main():
         dataset_prefix = "{}_".format(string.replace(spacecraft.lower(),'-','_'))
         dataset = string.replace(options.dataset,dataset_prefix,"")
 
-    # Plot options relating to the plotting viewport...
-    plot_style_options = set_plot_styles(goes_l1_obj,data_obj,dataset,options)
 
     # Create the plot
     if options.unnavigated :
@@ -1002,6 +1013,10 @@ def main():
     else :
         #plot_nav_options = set_plot_navigation_proj(lats,lons,goes_l1_obj,options)
         plot_nav_options = set_plot_navigation_bm(lats,lons,goes_l1_obj,options)
+
+        # Plot options relating to the plotting viewport...
+        plot_style_options = set_plot_styles(goes_l1_obj,data_obj,dataset,options,plot_nav_options)
+        
         goes_l1_obj.plot_L1_Map(lats,lons,data,data_mask,output_file,dataset,
                 plot_nav_options,plot_style_options)
 
