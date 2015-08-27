@@ -114,6 +114,7 @@ class geocat_colormaps():
         cmdata = cls.__ice_water_cmdata
         return LinearSegmentedColormap('ice_water_cm',cmdata,n_levels)
 
+    ###########################################################################
 
     @classmethod
     def __fog_cmdata(cls,cmap_break):
@@ -140,6 +141,34 @@ class geocat_colormaps():
         cmdata = cls.__fog_cmdata(cmap_break)
         return LinearSegmentedColormap('fog_cmap',cmdata,n_levels)
 
+    ###########################################################################
+
+    @classmethod
+    def __div_cmdata(cls,cmap_break):
+        cmdata = {'red': (
+                (0.0,        0.32156863808631897, 0.32156863808631897),
+                (cmap_break, 0.9686274528503418 , 0.9686274528503418),
+                (1.0,        0.09803921729326248, 0.09803921729326248)
+                 ),
+         'green': (
+                (0.0, 0.003921568859368563, 0.003921568859368563),
+                (cmap_break, 0.9686274528503418, 0.9686274528503418),
+                (1.0, 0.3921568691730499, 0.3921568691730499)
+                   ),
+         'blue': (
+                (0.0, 0.5568627715110779, 0.5568627715110779),
+                (cmap_break, 0.9686274528503418, 0.9686274528503418),
+                (1.0, 0.15294118225574493, 0.15294118225574493)
+                  )
+         }
+        return cmdata
+
+    @classmethod
+    def get_cmap_div(cls,cmap_break=0.55,n_levels=256):
+        cmdata = cls.__div_cmdata(cmap_break)
+        return LinearSegmentedColormap('div_cmap',cmdata,n_levels)
+
+    ###########################################################################
 
     __sst_cmdata = {
         'blue': [ (0.0, 0.46274509803921571, 0.46274509803921571),
