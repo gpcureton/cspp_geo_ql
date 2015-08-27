@@ -22,9 +22,6 @@ Copyright (c) 2012-2013 University of Wisconsin Regents. All rights reserved.
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import numpy as np
-import time
-
 from matplotlib import cm as cm
 import geocat_colormaps as g1_cmaps
 
@@ -33,40 +30,6 @@ class Dataset_Options:
     This class contains static data for the interpretation of the various  
     geocat discrete and continuous datasets.
     """
-
-    #satellite_cmap_dict={
-            #'goes_15_imager_channel_1_reflectance': cm.gray,
-            #'goes_15_imager_channel_2_brightness_temperature': CPD.cmap_ice_water,
-            #'goes_15_imager_channel_2_emissivity': CPD.cmap_ice_water,
-            #'goes_15_imager_channel_2_reflectance': cm.gray,
-            #'goes_15_imager_channel_3_brightness_temperature': CPD.cmap_ice_water,
-            #'goes_15_imager_channel_4_brightness_temperature': CPD.cmap_ice_water,
-            #'goes_15_imager_channel_6_brightness_temperature': CPD.cmap_ice_water,
-            #'pixel_ecosystem_type': CPD.cmap_ice_water,
-            #'pixel_latitude': CPD.cmap_ice_water,
-            #'pixel_longitude': CPD.cmap_ice_water,
-            #'pixel_relative_azimuth_angle': CPD.cmap_ice_water,
-            #'pixel_satellite_zenith_angle': CPD.cmap_ice_water,
-            #'pixel_solar_zenith_angle': CPD.cmap_ice_water,
-            #'pixel_surface_type': CPD.cmap_ice_water
-    #}
-
-    #geocat_cmap_dict={
-            #'channel_14_brightness_temperature': CPD.cmap_ice_water,
-            #'channel_16_brightness_temperature': CPD.cmap_ice_water,
-            #'channel_2_reflectance': cm.gray,
-            #'channel_7_brightness_temperature': CPD.cmap_ice_water,
-            #'channel_7_emissivity': CPD.cmap_ice_water,
-            #'channel_7_reflectance': cm.gray,
-            #'channel_9_brightness_temperature': CPD.cmap_ice_water,
-            #'pixel_ecosystem_type': CPD.cmap_ice_water,
-            #'pixel_latitude': CPD.cmap_ice_water,
-            #'pixel_longitude': CPD.cmap_ice_water,
-            #'pixel_relative_azimuth_angle': CPD.cmap_ice_water,
-            #'pixel_satellite_zenith_angle': CPD.cmap_ice_water,
-            #'pixel_solar_zenith_angle': CPD.cmap_ice_water,
-            #'pixel_surface_type': CPD.cmap_ice_water
-    #}
 
     data = {}
 
