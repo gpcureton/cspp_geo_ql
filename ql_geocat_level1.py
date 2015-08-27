@@ -73,567 +73,12 @@ from netCDF4 import Dataset
 from netCDF4 import num2date
 
 import geocat_l1_data
-from basemap_utils import drawparallels,drawmeridians
+from ql_geocat_common import GOES_NetCDF
+from ql_geocat_common import set_plot_navigation_bm as set_plot_navigation
+from ql_geocat_common import set_plot_styles
 
 # every module should have a LOG object
 LOG = logging.getLogger(__file__)
-
-
-class GOES_L1():
-
-    def __init__(self,l1_file):
-        pass
-
-
-    def plot_L1(self,data,data_mask,png_file,dataset,plot_style_options):
-
-        l1_dataset_options = geocat_l1_data.Dataset_Options.data[dataset]
-
-        # Copy the plot options to local variables
-        title         = plot_style_options['title']
-        cbar_title    = plot_style_options['cbar_title']
-        units         = plot_style_options['units']
-        stride        = plot_style_options['stride']
-        plotMin       = plot_style_options['plotMin']
-        plotMax       = plot_style_options['plotMax']
-        plotLims      = plot_style_options['plotLims']
-        cmap          = plot_style_options['cmap']
-        dpi           = plot_style_options['dpi']
-
-        '''
-        Plot the input dataset in in native data coordinates
-        '''
-
-        # If our data is all missing, return
-        if (np.sum(data_mask) == data.size):
-            LOG.warn("Entire {} dataset is missing, aborting".\
-                    format(cbar_title))
-            return -1
-
-        LOG.debug("{} data array has shape {}".format(title,data.shape))
-        data_aspect = float(data.shape[1])/float(data.shape[0])
-        LOG.debug("{} data array has aspect {}".format(title,data_aspect))
-
-        # Create figure with default size, and create canvas to draw on
-        scale=1.5
-        fig = Figure(figsize=(scale*5*data_aspect,1.1*scale*5))
-        canvas = FigureCanvas(fig)
-
-        # Create main axes instance, leaving room for colorbar at bottom,
-        # and also get the Bbox of the axes instance
-        ax_rect = [0.10, 0.15, 0.80, 0.8  ] # [left,bottom,width,height]
-        ax = fig.add_axes(ax_rect,axis_bgcolor='lightgray')
-
-        # Granule axis title
-        ax_title = ppl.setp(ax,title=title)
-        ppl.setp(ax_title,fontsize=12)
-        ppl.setp(ax_title,family="sans-serif")
-
-        LOG.debug('data.shape = {}'.format(data.shape))
-        LOG.debug('data_mask.shape = {}'.format(data_mask.shape))
-        data = ma.array(data[::stride,::stride],mask=data_mask[::stride,::stride])
-
-        LOG.debug('plotLims = {},{}'.format(plotLims[0],plotLims[1]))
-        vmin,vmax = plotLims[0],plotLims[1]
-
-        ax.set_aspect(data_aspect)
-
-        #im = ax.imshow(data,interpolation='nearest',aspect='auto',vmin=vmin,vmax=vmax,cmap=cmap)
-        im = ax.imshow(data,interpolation='nearest',vmin=vmin,vmax=vmax,cmap=cmap)
-
-        ppl.setp(ax.get_xticklabels(), visible=False)
-        ppl.setp(ax.get_yticklabels(), visible=False)
-        ppl.setp(ax.get_xticklines(),visible=False)
-        ppl.setp(ax.get_yticklines(),visible=False)
-
-        # add a colorbar axis
-        cax_rect = [0.10 , 0.05, 0.8 , 0.05 ] # [left,bottom,width,height]
-        cax = fig.add_axes(cax_rect,frameon=False) # setup colorbar axes
-
-        # Plot the colorbar.
-        cb = fig.colorbar(im, cax=cax, orientation='horizontal')
-        ppl.setp(cax.get_xticklabels(),fontsize=9)
-        ppl.setp(cax.get_xticklines(),visible=False)
-
-        # Colourbar title
-        cax_title = ppl.setp(cax,title=cbar_title)
-        ppl.setp(cax_title,fontsize=10)
-
-        # Redraw the figure
-        canvas.draw()
-
-        # Write the figure to file
-        canvas.print_figure(png_file,dpi=dpi)
-        LOG.info("Writing to {}...".format(png_file))
-
-
-    def plot_L1_Map(self,lat,lon,data,data_mask,png_file,dataset,
-            plot_nav_options,plot_style_options):
-
-        l1_dataset_options = geocat_l1_data.Dataset_Options.data[dataset]
-
-        # Copy the plot options to local variables
-        llcrnrx        = plot_nav_options['llcrnrx']
-        llcrnry        = plot_nav_options['llcrnry']
-        urcrnrx        = plot_nav_options['urcrnrx']
-        urcrnry        = plot_nav_options['urcrnry']
-
-        lon_0         = plot_nav_options['lon_0']
-
-        title         = plot_style_options['title']
-        cbar_title    = plot_style_options['cbar_title']
-        stride        = plot_style_options['stride']
-        plotMin       = plot_style_options['plotMin']
-        plotMax       = plot_style_options['plotMax']
-        plotLims      = plot_style_options['plotLims']
-
-        map_axis      = plot_style_options['map_axis']
-        cbar_axis     = plot_style_options['cbar_axis']
-        image_size    = plot_style_options['image_size']
-
-        map_res       = plot_style_options['map_res']
-        cmap          = plot_style_options['cmap']
-        doScatterPlot = plot_style_options['scatterPlot']
-        pointSize     = plot_style_options['pointSize']
-        dpi           = plot_style_options['dpi']
-
-
-        '''
-        Plot the input dataset in mapped to particular projection
-        '''
-
-        # If our data is all missing, return
-        if (np.sum(data_mask) == data.size):
-            LOG.warn("Entire {} dataset is missing, aborting".\
-                    format(cbar_title))
-            return -1
-
-        LOG.debug("data array has shape {}".format(data.shape))
-        data_aspect = float(data.shape[1])/float(data.shape[0])
-        LOG.debug("data array has aspect {}".format(data_aspect))
-
-        # Create figure with default size, and create canvas to draw on
-        fig = Figure(figsize=(image_size[0],image_size[1]))
-        canvas = FigureCanvas(fig)
-
-        fig.text(0.98, 0.01, "CSPP Geo L2 v0.1",fontsize=5, color='gray',ha='right',va='bottom',alpha=0.9)
-
-        # Create main axes instance, leaving room for colorbar at bottom,
-        # and also get the Bbox of the axes instance
-        ax_rect = map_axis # [left,bottom,width,height]
-        ax = fig.add_axes(ax_rect,axis_bgcolor='black')
-
-        # Granule axis title
-        ax_title = ppl.setp(ax,title=title)
-        ppl.setp(ax_title,fontsize=12)
-        ppl.setp(ax_title,family="sans-serif")
-
-        # Setup the map
-        m = Basemap(projection='geos',lon_0=lon_0,ax=ax,fix_aspect=True,resolution=map_res,
-                llcrnrx=llcrnrx,
-                llcrnry=llcrnry,
-                urcrnrx=urcrnrx,
-                urcrnry=urcrnry
-                )
-
-        x,y=m(lon[::stride,::stride],lat[::stride,::stride])
-
-        coastline_color = l1_dataset_options['coastline_color']
-        country_color = l1_dataset_options['country_color']
-        meridian_color = l1_dataset_options['meridian_color']
-        parallel_axes = plot_style_options['parallel_axes']
-        meridian_axes = plot_style_options['meridian_axes']
-
-        m.drawcoastlines(ax=ax,color=coastline_color,linewidth = 0.3)
-        m.drawcountries(ax=ax,color=country_color,linewidth = 0.2)
-        m.drawstates(ax=ax,color=country_color,linewidth = 0.2)
-        m.fillcontinents(color='0.',zorder=0)
-
-        drawparallels(m,np.arange( -90, 91,30), color = meridian_color, 
-                linewidth = 0.5,fontsize=6,labels=parallel_axes) # left, right, top or bottom
-        drawmeridians(m,np.arange(-180,180,30), color = meridian_color, 
-                linewidth = 0.5,fontsize=6,labels=meridian_axes) # left, right, top or bottom
-
-        LOG.debug('data.shape = {}'.format(data.shape))
-        LOG.debug('data_mask.shape = {}'.format(data_mask.shape))
-        data = ma.array(data[::stride,::stride],mask=data_mask[::stride,::stride])
-
-        LOG.debug('plotLims = {},{}'.format(plotLims[0],plotLims[1]))
-        vmin,vmax = plotLims[0],plotLims[-1]
-
-        if doScatterPlot:
-            cs = m.scatter(x,y,s=pointSize,c=data,axes=ax,edgecolors='none',
-                    vmin=vmin,vmax=vmax,cmap=cmap)
-        else:
-            cs = m.pcolor(x,y,data,axes=ax,edgecolors='none',antialiased=False,
-                    vmin=vmin,vmax=vmax,cmap=cmap)
-
-        ppl.setp(ax.get_xticklines(),visible=False)
-        ppl.setp(ax.get_yticklines(),visible=False)
-        ppl.setp(ax.get_xticklabels(), visible=False)
-        ppl.setp(ax.get_yticklabels(), visible=False)
-
-        # add a colorbar axis
-        cax_rect = cbar_axis
-        cax = fig.add_axes(cax_rect,frameon=False) # setup colorbar axes
-
-        # Plot the colorbar.
-        cb = fig.colorbar(cs, cax=cax, orientation='horizontal')
-        ppl.setp(cax.get_xticklabels(),fontsize=9)
-        ppl.setp(cax.get_xticklines(),visible=False)
-
-        # Colourbar title
-        cax_title = ppl.setp(cax,title=cbar_title)
-        ppl.setp(cax_title,fontsize=10)
-
-        # Redraw the figure
-        canvas.draw()
-
-        # Write the figure to file
-        canvas.print_figure(png_file,dpi=dpi)
-        LOG.info("Writing image file {}".format(png_file))
-
-
-class GOES_HDF4(GOES_L1):
-
-    def __init__(self,l1_file):
-
-
-        self.l1_file = l1_file
-
-        LOG.debug('Opening {} with GOES_HDF4...'.format(self.l1_file))
-        self.file_obj = SD(self.l1_file)
-        
-        # Dictionary of file object attributes
-        self.attrs = self.file_obj.attributes()
-
-        # Dictionary of dataset shape and type attributes
-        self.data_dict = self.file_obj.datasets()
-
-        # List of dataset names
-        self.datanames = self.data_dict.keys()
-        self.datanames.sort()
-
-
-    class Dataset():
-
-        def __init__(selfd,L1_obj,dataname):
-
-            selfd.dataname = dataname
-
-            selfd.dset_obj = L1_obj.file_obj.select(dataname)
-
-            selfd.attrs = selfd.dset_obj.attributes()
-            selfd.dset = ma.masked_equal(selfd.dset_obj.get(),selfd.attrs['_FillValue'])
-            
-            selfd.dset = selfd.dset * selfd.attrs['scale_factor'] + selfd.attrs['add_offset']
-
-    def close(self):
-        LOG.debug('Closing {}...'.format(self.l1_file))
-        self.file_obj.end()
-
-
-class GOES_NetCDF(GOES_L1):
-
-    def __init__(self,l1_file):
-
-
-        self.l1_file = l1_file
-
-        LOG.debug('Opening {} with GOES_NetCDF...'.format(self.l1_file))
-        self.file_obj = Dataset(self.l1_file)
-
-        # Dictionary of file object attributes
-        self.attrs = {}
-        for attr_key in self.file_obj.ncattrs():
-            self.attrs[attr_key] = getattr(self.file_obj,attr_key)
-        
-        # Ordered dictionary of dataset objects
-        self.data_dict = self.file_obj.variables
-
-        # List of dataset names
-        self.datanames = self.data_dict.keys()
-        self.datanames.sort()
-
-
-    class Dataset():
-
-        def __init__(selfd,L1_obj,dataname):
-
-            selfd.dataname = dataname
-
-            selfd.dset_obj = L1_obj.file_obj.variables[dataname]
-
-            selfd.attrs = {}
-            for attr_key in selfd.dset_obj.ncattrs():
-                selfd.attrs[attr_key] = getattr(selfd.dset_obj,attr_key)
-            
-            selfd.dset = ma.masked_equal(selfd.dset_obj[:],selfd.attrs['_FillValue'])
-            #selfd.dset = selfd.dset * selfd.attrs['scale_factor'] + selfd.attrs['add_offset']
-
-    def close(self):
-        LOG.debug('Closing {}...'.format(self.l1_file))
-        self.file_obj.close()
-
-
-def _tuple2args(parms):
-    s = ' '.join( '+%s=%s' % (k,v) for (k,v) in parms )
-    return s.encode('ascii')
-
-
-def set_plot_navigation_proj(lats,lons,goes_l1_obj, options):
-    """
-    Collects the various navigation options and does any required tweaking
-    before passing to the plotting method.
-
-    Uses Proj to generate the map projection.
-    """
-    # Here are some attributes from the geocat Level-1 files...
-    from mpl_toolkits.basemap.pyproj import Proj
-
-    nrows,ncols = lats.shape[0],lats.shape[1]
-    nrows_div2,ncols_div2 = np.floor_divide(nrows,2),np.floor_divide(ncols,2)
-    LOG.debug('lats.shape = {}'.format(lats.shape))
-    LOG.debug('nrows,ncols = ({},{})'.format(nrows,ncols))
-    LOG.debug('nrows_div2,ncols_div2 = ({},{})'.format(nrows_div2,ncols_div2))
-
-    corners = [(0,0), (0,-1), (-1,-1), (-1,0)]
-
-    for crnr,crnr_idx in zip(range(4),corners):
-        LOG.debug("({}) (lon,lat):({},{})".format(crnr,lons[crnr_idx],lats[crnr_idx]))
-
-
-    subsatellite_longitude = goes_l1_obj.attrs['Subsatellite_Longitude']
-    LOG.debug(' File subsatellite_Longitude = {}'.format(subsatellite_longitude))
-
-    plot_nav_options = {}
-
-    p1 = Proj("+proj=geos +h=35774290 +a= 6378137 +b= 6378137 +lon_0=-75 +units=meters +no_defs")
-
-    # Western edge
-    x,y = p1(lons[:,0],lats[:,0])
-    west_x = np.average(x.compressed())
-    # Eastern edge
-    x,y = p1(lons[:,-1],lats[:,-1])
-    east_x = np.average(x.compressed())
-    # Northern edge
-    x,y = p1(lons[0,:],lats[0,:])
-    north_y = np.average(y.compressed())
-    # Southern edge
-    x,y = p1(lons[-1,:],lats[-1,:])
-    south_y = np.average(y.compressed())
-
-    corner_x_fallback = [west_x,east_x,east_x,west_x]
-    corner_y_fallback = [north_y,north_y,south_y,south_y]
-
-    LOG.debug("(west_x ,east_x ):({:10.1f},{:10.1f})".format(west_x,east_x))
-    LOG.debug("(north_y,south_y):({:10.1f},{:10.1f})".format(north_y,south_y))
-
-    crnr_x_names_proj = ['ulcrnrx_proj','urcrnrx_proj','lrcrnrx_proj','llcrnrx_proj']
-    crnr_y_names_proj = ['ulcrnry_proj','urcrnry_proj','lrcrnry_proj','llcrnry_proj']
-
-    # The maximum extent of the full disk in the x and y directions
-    plot_nav_options['extent_x'] = p1(subsatellite_longitude+81.,0)[0]*2.
-    plot_nav_options['extent_y'] = p1(subsatellite_longitude,81.)[1]*2.
-    LOG.debug("(extent_x,extent_y):({},{})".format(plot_nav_options['extent_x'],plot_nav_options['extent_y']))
-
-    # Generate the corner-origin coordinates from Basemap object...
-    for crnr in range(4):
-        crnr_idx = corners[crnr]
-        lon,lat = lons[crnr_idx], lats[crnr_idx]
-        if ma.is_masked(lon) and ma.is_masked(lat):
-            x,y = corner_x_fallback[crnr],corner_y_fallback[crnr]
-        else:
-            x,y = p1(lon, lat)
-        #if crnr_x_names_proj[crnr] is not None:
-        plot_nav_options[crnr_x_names_proj[crnr]] = x
-        #if crnr_y_names_proj[crnr] is not None:
-        plot_nav_options[crnr_y_names_proj[crnr]] = y
-        LOG.debug(
-                "({}) (lon,lat):({},{}), (x,y): ({:10.1f},{:10.1f})".format(crnr,lon,lat,x,y))
-
-    # Default plot options
-    plot_nav_options['llcrnrx'] = options.llcrnrx
-    plot_nav_options['llcrnry'] = options.llcrnry
-    plot_nav_options['urcrnrx'] = options.urcrnrx
-    plot_nav_options['urcrnry'] = options.urcrnry
-
-
-    return plot_nav_options
-
-
-def set_plot_navigation_bm(lats,lons,goes_l1_obj, options):
-    """
-    Collects the various navigation options and does any required tweaking
-    before passing to the plotting method.
-
-    Uses Basemap to generate the map projection.
-    """
-
-    nrows,ncols = lats.shape[0],lats.shape[1]
-    nrows_div2,ncols_div2 = np.floor_divide(nrows,2),np.floor_divide(ncols,2)
-    LOG.debug('lats.shape = {}'.format(lats.shape))
-    LOG.debug('nrows,ncols = ({},{})'.format(nrows,ncols))
-    LOG.debug('nrows_div2,ncols_div2 = ({},{})'.format(nrows_div2,ncols_div2))
-
-    corners = [(0,0), (0,-1), (-1,-1), (-1,0)]
-
-    for crnr,crnr_idx in zip(range(4),corners):
-        LOG.debug("({}) (lon,lat):({},{})".format(crnr,lons[crnr_idx],lats[crnr_idx]))
-
-
-    subsatellite_longitude = goes_l1_obj.attrs['Subsatellite_Longitude']
-    LOG.info('File subsatellite_Longitude = {:6.1f}'.format(subsatellite_longitude))
-
-    m1 = Basemap(projection='geos',lon_0=subsatellite_longitude,resolution=None)
-
-    plot_nav_options = {}
-
-    # The maximum extent of the full disk in the x and y directions
-    plot_nav_options['extent_x'] = m1.urcrnrx
-    plot_nav_options['extent_y'] = m1.urcrnry
-    LOG.debug("(extent_x,extent_y):({},{})".format(plot_nav_options['extent_x'],plot_nav_options['extent_y']))
-
-    # Compute coordinates of sub-satellite point
-    x_subsat,y_subsat = m1(subsatellite_longitude,0)
-
-    is_full_disk = False
-    if ma.is_masked(lats[corners[0]]) and ma.is_masked(lats[corners[1]]) and \
-       ma.is_masked(lats[corners[2]]) and ma.is_masked(lats[corners[3]]):
-        is_full_disk = True
-
-    if options.region == "FD":
-        is_full_disk = True
-
-    if is_full_disk:
-
-        LOG.info("This image is full disk")
-
-        plot_nav_options['urcrnrx_map'] = plot_nav_options['extent_x'] - x_subsat
-        plot_nav_options['urcrnry_map'] = plot_nav_options['extent_y'] - y_subsat
-        plot_nav_options['llcrnrx_map'] = 0. - x_subsat
-        plot_nav_options['llcrnry_map'] = 0  - y_subsat
-
-    else:
-        LOG.info("This image is NOT full disk")
-
-        # Western edge
-        x,y = m1(lons[:,0],lats[:,0])
-        west_x = np.average(x.compressed())
-        # Eastern edge
-        x,y = m1(lons[:,-1],lats[:,-1])
-        east_x = np.average(x.compressed())
-        # Northern edge
-        x,y = m1(lons[0,:],lats[0,:])
-        north_y = np.average(y.compressed())
-        # Southern edge
-        x,y = m1(lons[-1,:],lats[-1,:])
-        south_y = np.average(y.compressed())
-
-        corner_x_fallback = [west_x,east_x,east_x,west_x]
-        corner_y_fallback = [north_y,north_y,south_y,south_y]
-
-        LOG.debug("(west_x ,east_x ):({:10.1f},{:10.1f})".format(west_x,east_x))
-        LOG.debug("(north_y,south_y):({:10.1f},{:10.1f})".format(north_y,south_y))
-
-        crnr_x_names = ['ulcrnrx','urcrnrx','lrcrnrx','llcrnrx']
-        crnr_y_names = ['ulcrnry','urcrnry','lrcrnry','llcrnry']
-
-        # Generate the center-origin coordinates from Proj object...
-        for crnr in range(4):
-            crnr_idx = corners[crnr]
-            lon,lat = lons[crnr_idx], lats[crnr_idx]
-            if ma.is_masked(lon) and ma.is_masked(lat):
-                x,y = corner_x_fallback[crnr],corner_y_fallback[crnr]
-            else:
-                x,y = m1(lon, lat)
-            plot_nav_options[crnr_x_names[crnr]] = x
-            plot_nav_options[crnr_y_names[crnr]] = y
-            LOG.debug(
-                    "({}) (lon,lat):({},{}), (x,y): ({:10.1f},{:10.1f})".format(crnr,lon,lat,x,y))
-
-        plot_nav_options['ulcrnrx_map'] = plot_nav_options['ulcrnrx'] - x_subsat
-        plot_nav_options['ulcrnry_map'] = plot_nav_options['ulcrnry'] - y_subsat
-        plot_nav_options['urcrnrx_map'] = plot_nav_options['urcrnrx'] - x_subsat
-        plot_nav_options['urcrnry_map'] = plot_nav_options['urcrnry'] - y_subsat
-        plot_nav_options['lrcrnrx_map'] = plot_nav_options['lrcrnrx'] - x_subsat
-        plot_nav_options['lrcrnry_map'] = plot_nav_options['lrcrnry'] - y_subsat
-        plot_nav_options['llcrnrx_map'] = plot_nav_options['llcrnrx'] - x_subsat
-        plot_nav_options['llcrnry_map'] = plot_nav_options['llcrnry'] - y_subsat
-
-
-    plot_nav_options['llcrnrx'] = plot_nav_options['llcrnrx_map'] if options.viewport is None else options.viewport[0] * plot_nav_options['extent_x']
-    plot_nav_options['llcrnry'] = plot_nav_options['llcrnry_map'] if options.viewport is None else options.viewport[1] * plot_nav_options['extent_y'] 
-    plot_nav_options['urcrnrx'] = plot_nav_options['urcrnrx_map'] if options.viewport is None else options.viewport[2] * plot_nav_options['extent_x'] 
-    plot_nav_options['urcrnry'] = plot_nav_options['urcrnry_map'] if options.viewport is None else options.viewport[3] * plot_nav_options['extent_y'] 
-
-    plot_nav_options['lon_0'] = subsatellite_longitude
-    plot_nav_options['is_full_disk'] = is_full_disk
-
-    return plot_nav_options
-
-
-def set_plot_styles(goes_l1_obj,data_obj, dataset, options, plot_nav_options):
-    """
-    Collects the various plot formatting options and does any required tweaking
-    before passing to the plotting method.
-    """
-
-    l1_dataset_options = geocat_l1_data.Dataset_Options.data[dataset]
-
-    plot_style_options = {}
-    plot_style_options['stride'] = options.stride
-    plot_style_options['plotMin'] = l1_dataset_options['values'][0] if options.plotMin==None else options.plotMin
-    plot_style_options['plotMax'] = l1_dataset_options['values'][-1] if options.plotMax==None else options.plotMax
-    plot_style_options['plotLims'] = [plot_style_options['plotMin'],plot_style_options['plotMax']]
-    plot_style_options['map_res'] = options.map_res
-    plot_style_options['map_axis'] = options.map_axis
-    plot_style_options['cbar_axis'] = options.cbar_axis
-    plot_style_options['image_size'] = options.image_size
-    plot_style_options['scatterPlot'] = options.doScatterPlot
-    plot_style_options['pointSize'] = options.pointSize
-    plot_style_options['dpi'] = options.dpi
-
-    image_year = 1900 + int(str(goes_l1_obj.attrs['Image_Date'])[:3])
-    image_jday = int(str(goes_l1_obj.attrs['Image_Date'])[3:])
-    date_str = "{}-{}-{}".format(image_year,image_jday,goes_l1_obj.attrs['Image_Time'])
-    dt_image_date = datetime.strptime(date_str,'%Y-%j-%H%M%S')
-
-    # Set the plot title
-    if options.plot_title==None:
-        plot_style_options['title'] = "{} Imager, {}\n{}".format(
-                goes_l1_obj.attrs['Spacecraft_Name'],
-                l1_dataset_options['name'],
-                dt_image_date.strftime('%Y-%m-%d %H:%M')
-                )
-
-    # Set the colorbar label
-    plot_style_options['units'] = l1_dataset_options['units'] if data_obj.attrs['units']=="none" else data_obj.attrs['units']
-    if options.cbar_title==None:
-        plot_style_options['cbar_title'] = "{} [{}]".format(
-                l1_dataset_options['quantity'],
-                plot_style_options['units']
-                )
-
-    # Set the colormap
-    if options.cmap == None:
-        plot_style_options['cmap'] = l1_dataset_options['cmap']
-    else :
-        try:
-            plot_style_options['cmap'] = getattr(cm,options.cmap)
-        except AttributeError:
-            LOG.warning('Colormap {} does not exist, falling back to Spectral_r'.format(options.cmap))
-            plot_style_options['cmap'] = getattr(cm,'Spectral_r')
-
-    # Set which axes parallels and meridians get labeled at...
-    if plot_nav_options['is_full_disk']:
-        plot_style_options['parallel_axes'] = [0,0,0,0]
-        plot_style_options['meridian_axes'] = [0,0,0,0]
-    else:
-        plot_style_options['parallel_axes'] = [1,0,0,0]
-        plot_style_options['meridian_axes'] = [0,0,0,1]
-
-    return plot_style_options
 
 
 def _argparse():
@@ -669,12 +114,7 @@ def _argparse():
                 'input_file':None,
                 'dataset':'channel_2_reflectance',
                 'stride':1,
-                #'lat_0':None,
                 'lon_0':None,
-                'extent_x':1.,
-                'extent_y':1.,
-                'offset_x':0.,
-                'offset_y':0.,
                 'llcrnrx':None,
                 'llcrnry':None,
                 'urcrnrx':None,
@@ -696,7 +136,7 @@ def _argparse():
                 'dpi':200
                 }
 
-    description = '''Create a plot of a level-1 dataset from a geocat HDF4 file.'''
+    description = '''Create a plot of a level-1 dataset from a geocat netCDF4 file.'''
 
     usage = "usage: %prog [mandatory args] [options]"
     version = 0.1
@@ -773,6 +213,7 @@ def _argparse():
                       dest="viewport",
                       type=float,
                       nargs=4,
+                      metavar=('LLCRNRX', 'LLCRNRY', 'URCRNRX', 'URCRNRY'),
                       help="""Lower-left and upper-right coordinates 
                       [*llcrnrx*, *llcrnry*, *urcrnrx*, *urcrnry*] of the projection 
                       viewport, in the range [-0.5,+0.5] (for navigated plots only)"""
@@ -784,6 +225,7 @@ def _argparse():
                       default=defaults["image_size"],
                       type=float,
                       nargs=2,
+                      metavar=('WIDTH', 'HEIGHT'),
                       help="""The size of the output image [*width*, *height*]
                       in inches. [default: '{}']""".format(defaults["image_size"])
                       )
@@ -815,6 +257,7 @@ def _argparse():
                       default=defaults["map_axis"],
                       type=float,
                       nargs=4,
+                      metavar=('LEFT', 'BOTTOM', 'WIDTH', 'HEIGHT'),
                       help="""Set the map axes at position [*left*, *bottom*, *width*, *height*] 
                       where all quantities are in fractions of figure width and height. 
                       [default: '{}']""".format(defaults["map_axis"])
@@ -826,6 +269,7 @@ def _argparse():
                       default=defaults["cbar_axis"],
                       type=float,
                       nargs=4,
+                      metavar=('LEFT', 'BOTTOM', 'WIDTH', 'HEIGHT'),
                       help="""Set the colorbar axes at position [*left*, *bottom*, *width*, *height*] 
                       where all quantities are in fractions of figure width and height. 
                       [default: '{}']""".format(defaults["cbar_axis"])
@@ -946,7 +390,7 @@ def main():
     output_file  = options.output_file
     outputFilePrefix  = options.outputFilePrefix
 
-    # Create and populate the GOES-L1 object
+    # Create and populate the GOES object
     #goes_l1_obj = GOES_HDF4(options.input_file)
     goes_l1_obj = GOES_NetCDF(options.input_file)
 
@@ -1005,20 +449,29 @@ def main():
         dataset_prefix = "{}_".format(string.replace(spacecraft.lower(),'-','_'))
         dataset = string.replace(options.dataset,dataset_prefix,"")
 
+    # Get the dataset options
+    dataset_options = geocat_l1_data.Dataset_Options.data[dataset]
+
+    # Set the navigation 
+    plot_nav_options = set_plot_navigation(lats,lons,goes_l1_obj,options)
+
+    # Set the plot styles 
+    plot_style_options = set_plot_styles(goes_l1_obj,data_obj,
+            dataset_options,options,plot_nav_options)
+
+    # Get pointers to the desired plotting routines
+    plot_image = plot_style_options['plot_image']
+    plot_map = plot_style_options['plot_map']
 
     # Create the plot
     if options.unnavigated :
-        goes_l1_obj.plot_L1(data,data_mask,output_file,dataset,
-                plot_style_options)
-    else :
-        #plot_nav_options = set_plot_navigation_proj(lats,lons,goes_l1_obj,options)
-        plot_nav_options = set_plot_navigation_bm(lats,lons,goes_l1_obj,options)
 
-        # Plot options relating to the plotting viewport...
-        plot_style_options = set_plot_styles(goes_l1_obj,data_obj,dataset,options,plot_nav_options)
-        
-        goes_l1_obj.plot_L1_Map(lats,lons,data,data_mask,output_file,dataset,
-                plot_nav_options,plot_style_options)
+        plot_image(data, data_mask, output_file, dataset_options, plot_style_options)
+
+    else :
+
+        plot_map(lats,lons, data, data_mask, output_file,
+                dataset_options, plot_nav_options, plot_style_options)
 
     return 0
 
