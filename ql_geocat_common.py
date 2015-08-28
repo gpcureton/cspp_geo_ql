@@ -113,8 +113,12 @@ class GOES_NetCDF():
 
         self.input_file = input_file
 
-        LOG.debug('Opening {} with GOES_NetCDF...'.format(self.input_file))
-        self.file_obj = Dataset(self.input_file)
+        if os.path.exists(self.input_file):
+            LOG.debug('Opening {} with GOES_NetCDF...'.format(self.input_file))
+            self.file_obj = Dataset(self.input_file)
+        else:
+            LOG.error('Input file {} does not exist, aborting...'.format(self.input_file))
+            sys.exit(1)
 
         # Dictionary of file object attributes
         self.attrs = {}
@@ -361,10 +365,8 @@ def set_plot_styles(goes_obj, data_obj, dataset_options, options, plot_nav_optio
     plot_style_options['pointSize'] = options.pointSize
     plot_style_options['dpi'] = options.dpi
 
-    image_year = 1900 + int(str(goes_obj.attrs['Image_Date'])[:3])
-    image_jday = int(str(goes_obj.attrs['Image_Date'])[3:])
-    date_str = "{}-{}-{}".format(image_year,image_jday,goes_obj.attrs['Image_Time'])
-    dt_image_date = datetime.strptime(date_str,'%Y-%j-%H%M%S')
+    image_date_time = goes_obj.attrs['Image_Date_Time']
+    dt_image_date = datetime.strptime(image_date_time,'%Y-%m-%dT%H:%M:%SZ')
 
     # Set the plot title
     if options.plot_title==None:
@@ -496,8 +498,6 @@ def plot_image_continuous(data,data_mask,png_file,dataset,plot_style_options):
 def plot_map_continuous(lat,lon,data,data_mask,png_file,
         dataset_options,plot_nav_options,plot_style_options):
 
-    #dataset_options = geocat_l1_data.Dataset_Options.data[dataset]
-
     # Copy the plot options to local variables
     llcrnrx        = plot_nav_options['llcrnrx']
     llcrnry        = plot_nav_options['llcrnry']
@@ -542,7 +542,7 @@ def plot_map_continuous(lat,lon,data,data_mask,png_file,
     fig = Figure(figsize=(image_size[0],image_size[1]))
     canvas = FigureCanvas(fig)
 
-    fig.text(0.98, 0.01, "CSPP Geo L2 v0.1",fontsize=5, color='gray',ha='right',va='bottom',alpha=0.9)
+    fig.text(0.98, 0.01, "CSPP Geo L2 v1.0beta",fontsize=5, color='gray',ha='right',va='bottom',alpha=0.9)
 
     # Create main axes instance, leaving room for colorbar at bottom,
     # and also get the Bbox of the axes instance
@@ -551,7 +551,7 @@ def plot_map_continuous(lat,lon,data,data_mask,png_file,
 
     # Granule axis title
     ax_title = ppl.setp(ax,title=title)
-    ppl.setp(ax_title,fontsize=12)
+    ppl.setp(ax_title,fontsize=11)
     ppl.setp(ax_title,family="sans-serif")
 
     # Setup the map
