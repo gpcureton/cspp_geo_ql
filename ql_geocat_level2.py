@@ -390,10 +390,10 @@ def _argparse():
                       png names. [default: {}]""".format(defaults["outputFilePrefix"])
                       )
 
-    parser.add_argument("-v", "--verbose",
+    parser.add_argument("-v", "--verbosity",
                       dest='verbosity',
                       action="count", 
-                      default=0,
+                      default=2,
                       help='''each occurrence increases verbosity 1 level from 
                       ERROR: -v=WARNING -vv=INFO -vvv=DEBUG'''
                       )
@@ -402,12 +402,17 @@ def _argparse():
     args = parser.parse_args()
 
     # Set up the logging
-    console_logFormat = '%(asctime)s : (%(levelname)s):%(filename)s:%(funcName)s:%(lineno)d:  %(message)s'
-    dateFormat = '%Y-%m-%d %H:%M:%S'
     levels = [logging.ERROR, logging.WARN, logging.INFO, logging.DEBUG]
-    logging.basicConfig(level = levels[args.verbosity], 
-            format = console_logFormat, 
-            datefmt = dateFormat)
+    level = levels[args.verbosity if args.verbosity < 4 else 3]
+
+    if level == logging.DEBUG :
+        console_logFormat = '%(asctime)s.%(msecs)03d (%(levelname)s) : %(filename)s : %(funcName)s : %(lineno)d:%(message)s'
+        date_format = '%Y-%m-%d %H:%M:%S'
+    else:
+        console_logFormat = '%(asctime)s.%(msecs)03d (%(levelname)s) : %(message)s'
+        date_format = '%Y-%m-%d %H:%M:%S'
+
+    logging.basicConfig(level=level, format=console_logFormat, datefmt=date_format)
 
     return args
 
