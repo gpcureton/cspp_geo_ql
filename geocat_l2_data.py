@@ -89,7 +89,8 @@ class Dataset_Options:
                 'country_color':'magenta',
                 'meridian_color':'yellow',
                 #'cmap':cm.gray,
-                'cmap':cm.Blues_r,
+                #'cmap':cm.Blues_r,
+                'cmap':cm.cubehelix,
                 'n_levels':256
                 }
     data['ACHA_mode_7_goes_cloud_optical_depth_vis'] = {
@@ -102,12 +103,13 @@ class Dataset_Options:
                 'country_color':'magenta',
                 'meridian_color':'yellow',
                 #'cmap':cm.gray,
-                'cmap':cm.Blues_r,
+                #'cmap':cm.Blues_r,
+                'cmap':cm.cubehelix,
                 #'cmap':g2_cmaps.geocat_colormaps.get_cmap_ice_water(),
                 'n_levels':256
                 }
     data['ACHA_mode_7_goes_cloud_particle_effective_radius'] = {
-                'name':'ACHA mode 7 GOES Cloud Particle Effective Radius)',
+                'name':'ACHA mode 7 GOES Cloud Particle Effective Radius',
                 'quantity':'effective radius',
                 'discrete':False,
                 'values':[0.,40.],
@@ -117,7 +119,8 @@ class Dataset_Options:
                 'meridian_color':'yellow',
                 #'cmap':cm.gray,
                 #'cmap':cm.Blues,
-                'cmap':cm.Blues_r,
+                #'cmap':cm.Blues_r,
+                'cmap':cm.cubehelix,
                 #'cmap':g2_cmaps.geocat_colormaps.get_cmap_ice_water(),
                 'n_levels':256
                 }
@@ -131,8 +134,9 @@ class Dataset_Options:
                 'country_color':'magenta',
                 'meridian_color':'yellow',
                 #'cmap':cm.gray,
-                #'cmap':cm.cubehelix,
-                'cmap':g2_cmaps.geocat_colormaps.get_cmap_div(cmap_break=0.5),
+                'cmap':cm.cubehelix,
+                #'cmap':cm.Blues_r,
+                #'cmap':g2_cmaps.geocat_colormaps.get_cmap_div(cmap_break=0.5),
                 #'cmap':g2_cmaps.geocat_colormaps.get_cmap_ice_water(),
                 'n_levels':256
                 }
@@ -161,7 +165,8 @@ class Dataset_Options:
                 'meridian_color':'yellow',
                 #'cmap':cm.gray,
                 #'cmap':cm.Blues,
-                'cmap':g2_cmaps.geocat_colormaps.get_cmap_div(cmap_break=0.80),
+                #'cmap':g2_cmaps.geocat_colormaps.get_cmap_div(cmap_break=0.80),
+                'cmap':cm.cubehelix_r,
                 #'cmap':g2_cmaps.geocat_colormaps.get_cmap_ice_water(),
                 'n_levels':256
                 }
@@ -176,44 +181,52 @@ class Dataset_Options:
                 'meridian_color':'yellow',
                 #'cmap':g2_cmaps.geocat_colormaps.get_cmap_ice_water(),
                 #'cmap':cm.gray,
-                'cmap':cm.Blues_r,
+                #'cmap':cm.Blues_r,
+                'cmap':cm.cubehelix,
                 'n_levels':256
                 }
-    #data['DCOMP_mode_3_cloud_spherical_albedo'] = {
-                #'name':'DCOMP mode 3 Cloud Spherical Albedo',
-                #'quantity':'albedo',
-                #'discrete':False,
-                #'values':[0.,1.],
-                #'units': None,
-                #'coastline_color':'cyan',
-                #'country_color':'magenta',
-                #'meridian_color':'yellow',
-                #'cmap':cm.gray,
-                #'n_levels':256
-                #}
-    data['DCOMP_mode_3_cloud_ice_water_path'] = {
-                'name':'DCOMP mode 3 Cloud Ice Water Path',
-                'quantity':'',
+    data['DCOMP_mode_3_cloud_spherical_albedo'] = {
+                'name':'DCOMP mode 3 Cloud Spherical Albedo',
+                'quantity':'albedo',
                 'discrete':False,
-                'values':[None,None],
-                'units': '$\mathrm{g m}^{2}$',
+                'values':[0.,1.],
+                'units': None,
                 'coastline_color':'cyan',
                 'country_color':'magenta',
                 'meridian_color':'yellow',
                 #'cmap':g2_cmaps.geocat_colormaps.get_cmap_ice_water(),
-                'cmap':cm.Blues,
+                #'cmap':cm.gray,
+                #'cmap':cm.Blues_r,
+                'cmap':cm.cubehelix,
+                'n_levels':256
+                }
+    data['DCOMP_mode_3_cloud_ice_water_path'] = {
+                'name':'DCOMP mode 3 Cloud Ice Water Path',
+                'quantity':'ice water path',
+                'discrete':False,
+                #'values':[None,None],
+                'values':[0., 1000.],
+                'units': '$\mathrm{g m}^{-2}$',
+                'coastline_color':'cyan',
+                'country_color':'magenta',
+                'meridian_color':'yellow',
+                #'cmap':g2_cmaps.geocat_colormaps.get_cmap_ice_water(),
+                #'cmap':cm.Blues,
+                'cmap':cm.cubehelix,
                 'n_levels':256
                 }
     data['DCOMP_mode_3_cloud_liquid_water_path'] = {
                 'name':'DCOMP mode 3 Cloud Liquid Water Path',
-                'quantity':'',
+                'quantity':'liquid water path',
                 'discrete':False,
-                'values':[None,None],
-                'units': '$\mathrm{g m}^{2}$',
+                #'values':[None,None],
+                'values':[0., 1000.],
+                'units': '$\mathrm{g m}^{-2}$',
                 'coastline_color':'cyan',
                 'country_color':'magenta',
                 'meridian_color':'yellow',
-                'cmap':cm.Blues,
+                #'cmap':cm.Blues,
+                'cmap':cm.cubehelix,
                 #'cmap':g2_cmaps.geocat_colormaps.get_cmap_ice_water(),
                 'n_levels':256
                 }
@@ -221,13 +234,14 @@ class Dataset_Options:
                 'name':'DCOMP mode 3 Cloud Optical Depth (visible)',
                 'quantity':'optical depth',
                 'discrete':False,
-                'values':[None,None],
+                'values':[0.,15.],
                 'units': None,
                 'coastline_color':'cyan',
                 'country_color':'magenta',
                 'meridian_color':'yellow',
                 #'cmap':g2_cmaps.geocat_colormaps.get_cmap_ice_water(),
-                'cmap':cm.Blues,
+                #'cmap':cm.Blues,
+                'cmap':cm.cubehelix,
                 'n_levels':256
                 }
     data['DCOMP_mode_3_cloud_particle_effective_radius'] = {
@@ -240,7 +254,8 @@ class Dataset_Options:
                 'country_color':'magenta',
                 'meridian_color':'yellow',
                 #'cmap':g2_cmaps.geocat_colormaps.get_cmap_ice_water(),
-                'cmap':cm.Blues,
+                #'cmap':cm.Blues,
+                'cmap':cm.cubehelix,
                 'n_levels':256
                 }
     data['goesr_fog_IFR_fog_probability'] = {
@@ -288,6 +303,6 @@ class Dataset_Options:
                 'coastline_color':'cyan',
                 'country_color':'magenta',
                 'meridian_color':'yellow',
-                'cmap':cm.gray,
+                'cmap':cm.cubehelix,
                 'n_levels':256
                 }

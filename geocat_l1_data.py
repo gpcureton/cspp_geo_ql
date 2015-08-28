@@ -203,6 +203,18 @@ class Dataset_Options:
                 'cmap':g1_cmaps.geocat_colormaps.get_cmap_ice_water(),
                 'n_levels':256
                 }
+    data['unknown'] = {
+                'name':None,
+                'quantity':None,
+                'discrete':False,
+                'values':[None,None],
+                'units': None,
+                'coastline_color':'cyan',
+                'country_color':'magenta',
+                'meridian_color':'yellow',
+                'cmap':cm.cubehelix,
+                'n_levels':256
+                }
 
     navigation = {}
 
