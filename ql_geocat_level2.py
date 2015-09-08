@@ -162,6 +162,7 @@ def _argparse():
                 'unnavigated':False,
                 'list_datasets':False,
                 'pointSize':1,
+                'font_scale':1.,
                 'map_res':'c',
                 'cmap':None,
                 'output_file':None,
@@ -347,6 +348,15 @@ def _argparse():
                       [default: {}]'''.format(defaults["pointSize"])
                       )
 
+    parser.add_argument('--font_scale',
+                      action="store",
+                      dest="font_scale",
+                      default=defaults["font_scale"],
+                      type=float,
+                      help='''The scale factor to apply to the default font size
+                      for the plot labels. [default: {}]'''.format(defaults["font_scale"])
+                      )
+
     parser.add_argument('--cmap',
                       action="store",
                       dest="cmap",
@@ -442,7 +452,7 @@ def main():
         for dsets in goes_l2_obj.datanames:
             print "\t{}".format(dsets)
         goes_l2_obj.close()
-        sys.exit(1)
+        return 0
 
     # Read in the desired dataset
     try:

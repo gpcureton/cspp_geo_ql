@@ -363,6 +363,7 @@ def set_plot_styles(goes_obj, data_obj, dataset_options, options, plot_nav_optio
     plot_style_options['image_size'] = options.image_size
     plot_style_options['scatterPlot'] = options.doScatterPlot
     plot_style_options['pointSize'] = options.pointSize
+    plot_style_options['font_scale'] = options.font_scale
     plot_style_options['dpi'] = options.dpi
 
     image_date_time = goes_obj.attrs['Image_Date_Time']
@@ -521,6 +522,7 @@ def plot_map_continuous(lat,lon,data,data_mask,png_file,
     cmap          = plot_style_options['cmap']
     doScatterPlot = plot_style_options['scatterPlot']
     pointSize     = plot_style_options['pointSize']
+    font_scale    = plot_style_options['font_scale']
     dpi           = plot_style_options['dpi']
 
 
@@ -542,7 +544,7 @@ def plot_map_continuous(lat,lon,data,data_mask,png_file,
     fig = Figure(figsize=(image_size[0],image_size[1]))
     canvas = FigureCanvas(fig)
 
-    fig.text(0.98, 0.01, "CSPP Geo L2 v1.0beta",fontsize=5, color='gray',ha='right',va='bottom',alpha=0.9)
+    fig.text(0.98, 0.01, "CSPP Geo L2 v1.0beta",fontsize=font_scale*5, color='gray',ha='right',va='bottom',alpha=0.9)
 
     # Create main axes instance, leaving room for colorbar at bottom,
     # and also get the Bbox of the axes instance
@@ -551,7 +553,7 @@ def plot_map_continuous(lat,lon,data,data_mask,png_file,
 
     # Granule axis title
     ax_title = ppl.setp(ax,title=title)
-    ppl.setp(ax_title,fontsize=11)
+    ppl.setp(ax_title,fontsize=font_scale*11)
     ppl.setp(ax_title,family="sans-serif")
 
     # Setup the map
@@ -576,9 +578,9 @@ def plot_map_continuous(lat,lon,data,data_mask,png_file,
     m.fillcontinents(color='0.',zorder=0)
 
     drawparallels(m,np.arange( -90, 91,30), color = meridian_color, 
-            linewidth = 0.5,fontsize=6,labels=parallel_axes) # left, right, top or bottom
+            linewidth = 0.5,fontsize=font_scale*6,labels=parallel_axes) # left, right, top or bottom
     drawmeridians(m,np.arange(-180,180,30), color = meridian_color, 
-            linewidth = 0.5,fontsize=6,labels=meridian_axes) # left, right, top or bottom
+            linewidth = 0.5,fontsize=font_scale*6,labels=meridian_axes) # left, right, top or bottom
 
     LOG.debug('data.shape = {}'.format(data.shape))
     LOG.debug('data_mask.shape = {}'.format(data_mask.shape))
@@ -605,12 +607,12 @@ def plot_map_continuous(lat,lon,data,data_mask,png_file,
 
     # Plot the colorbar.
     cb = fig.colorbar(cs, cax=cax, orientation='horizontal')
-    ppl.setp(cax.get_xticklabels(),fontsize=9)
+    ppl.setp(cax.get_xticklabels(),fontsize=font_scale*9)
     ppl.setp(cax.get_xticklines(),visible=False)
 
     # Colourbar title
     cax_title = ppl.setp(cax,title=cbar_title)
-    ppl.setp(cax_title,fontsize=10)
+    ppl.setp(cax_title,fontsize=font_scale*10)
 
     # Redraw the figure
     canvas.draw()
@@ -762,7 +764,7 @@ def plot_map_discrete(lat,lon,data,data_mask,png_file,
     fig = Figure(figsize=(image_size[0],image_size[1]))
     canvas = FigureCanvas(fig)
 
-    fig.text(0.98, 0.01, "CSPP Geo L2 v0.1",fontsize=5, color='gray',ha='right',va='bottom',alpha=0.9)
+    fig.text(0.98, 0.01, "CSPP Geo L2 v0.1",fontsize=font_scale*5, color='gray',ha='right',va='bottom',alpha=0.9)
 
     # Create main axes instance, leaving room for colorbar at bottom,
     # and also get the Bbox of the axes instance
@@ -771,7 +773,7 @@ def plot_map_discrete(lat,lon,data,data_mask,png_file,
 
     # Granule axis title
     ax_title = ppl.setp(ax,title=title)
-    ppl.setp(ax_title,fontsize=12)
+    ppl.setp(ax_title,fontsize=font_scale*12)
     ppl.setp(ax_title,family="sans-serif")
 
     fill_colours = dataset_options['fill_colours']
@@ -805,9 +807,9 @@ def plot_map_discrete(lat,lon,data,data_mask,png_file,
     m.fillcontinents(color='0.',zorder=0)
 
     drawparallels(m,np.arange( -90, 91,30), color = meridian_color, 
-            linewidth = 0.5,fontsize=6,labels=parallel_axes) # left, right, top or bottom
+            linewidth = 0.5,fontsize=font_scale*6,labels=parallel_axes) # left, right, top or bottom
     drawmeridians(m,np.arange(-180,180,30), color = meridian_color, 
-            linewidth = 0.5,fontsize=6,labels=meridian_axes) # left, right, top or bottom
+            linewidth = 0.5,fontsize=font_scale*6,labels=meridian_axes) # left, right, top or bottom
 
     LOG.debug('data.shape = {}'.format(data.shape))
     LOG.debug('data_mask.shape = {}'.format(data_mask.shape))
@@ -834,7 +836,7 @@ def plot_map_discrete(lat,lon,data,data_mask,png_file,
 
     # Plot the colorbar.
     cb = fig.colorbar(cs, cax=cax, orientation='horizontal')
-    ppl.setp(cax.get_xticklabels(),fontsize=9)
+    ppl.setp(cax.get_xticklabels(),fontsize=font_scale*9)
     ppl.setp(cax.get_xticklines(),visible=False)
 
     # Set the colourbar tick locations and ticklabels
@@ -846,7 +848,7 @@ def plot_map_discrete(lat,lon,data,data_mask,png_file,
 
     # Colourbar title
     cax_title = ppl.setp(cax,title=cbar_title)
-    ppl.setp(cax_title,fontsize=10)
+    ppl.setp(cax_title,fontsize=font_scale*10)
 
     # Redraw the figure
     canvas.draw()
