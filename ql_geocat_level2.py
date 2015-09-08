@@ -339,6 +339,18 @@ def _argparse():
                       required dataset as 'None'."""
                       )
 
+    parser.add_argument('--logscale',
+                      action="store_true",
+                      dest="logscale",
+                      help="""Plot the dataset using a logarithmic scale."""
+                      )
+
+    parser.add_argument('--no_logscale',
+                      action="store_true",
+                      dest="no_logscale",
+                      help="""Plot the dataset using a linear scale."""
+                      )
+
     parser.add_argument('-P','--pointSize',
                       action="store",
                       dest="pointSize",

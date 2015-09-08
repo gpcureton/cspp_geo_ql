@@ -40,8 +40,10 @@ from scipy import vectorize
 
 import matplotlib
 import matplotlib.cm as cm
+from matplotlib.colors import LogNorm
 from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
+from matplotlib.ticker import LogLocator,LogFormatter
 
 matplotlib.use('Agg')
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -356,7 +358,6 @@ def set_plot_styles(goes_obj, data_obj, dataset_options, options, plot_nav_optio
     plot_style_options['stride'] = options.stride
     plot_style_options['plotMin'] = dataset_options['values'][0] if options.plotMin==None else options.plotMin
     plot_style_options['plotMax'] = dataset_options['values'][-1] if options.plotMax==None else options.plotMax
-    plot_style_options['plotLims'] = [plot_style_options['plotMin'],plot_style_options['plotMax']]
     plot_style_options['map_res'] = options.map_res
     plot_style_options['map_axis'] = options.map_axis
     plot_style_options['cbar_axis'] = options.cbar_axis
@@ -399,6 +400,38 @@ def set_plot_styles(goes_obj, data_obj, dataset_options, options, plot_nav_optio
             LOG.warning('Colormap {} does not exist, falling back to cubehelix_r\n{}'
                     .format(options.cmap,warn_str))
             plot_style_options['cmap'] = getattr(cm,'cubehelix_r')
+
+    # Determine whether to plot on a log scale
+    if 'logscale' in dataset_options.keys():
+        if options.logscale and options.no_logscale:
+            LOG.warning("Only one of the options --logscale and --no_logscale can be used, defaulting to linear scale.")
+            plot_style_options['log_plot'] = False
+        elif options.logscale:
+            plot_style_options['log_plot'] = True
+        elif options.no_logscale:
+            plot_style_options['log_plot'] = False
+        else:
+            plot_style_options['log_plot'] = dataset_options['logscale']
+
+        if plot_style_options['log_plot']:
+            if plot_style_options['plotMin'] <= 0.:
+                plot_style_options['plotMin'] = 0.1
+            if plot_style_options['plotMax'] <= 0.:
+                plot_style_options['plotMax'] = 1.0
+
+    else:
+        if options.logscale:
+            LOG.warning('The dataset {} does not support log scaling, plotting on a linear scale'
+                    .format(options.dataset))
+            plot_style_options['log_plot'] = False
+
+
+    if plot_style_options['plotMin'] > plot_style_options['plotMax']:
+        LOG.warning('Plot limit --plotMin={} > --plotMax={}, reversing the limits'
+                .format(plot_style_options['plotMin'],plot_style_options['plotMax']))
+        plot_style_options['plotMin'],plot_style_options['plotMax'] = plot_style_options['plotMax'],plot_style_options['plotMin']
+
+    plot_style_options['plotLims'] = [plot_style_options['plotMin'],plot_style_options['plotMax']]
 
     # Set which axes parallels and meridians get labeled at...
     if plot_nav_options['is_full_disk']:
@@ -523,6 +556,7 @@ def plot_map_continuous(lat,lon,data,data_mask,png_file,
     doScatterPlot = plot_style_options['scatterPlot']
     pointSize     = plot_style_options['pointSize']
     font_scale    = plot_style_options['font_scale']
+    log_plot      = plot_style_options['log_plot']
     dpi           = plot_style_options['dpi']
 
 
@@ -590,11 +624,15 @@ def plot_map_continuous(lat,lon,data,data_mask,png_file,
     vmin,vmax = plotLims[0],plotLims[-1]
 
     if doScatterPlot:
-        cs = m.scatter(x,y,s=pointSize,c=data,axes=ax,edgecolors='none',
-                vmin=vmin,vmax=vmax,cmap=cmap)
+        cs_kwargs = {'s':pointSize,'c':data,'axes':ax,'edgecolors':'none',
+                'vmin':vmin,'vmax':vmax,'cmap':cmap}
+        if log_plot: cs_kwargs['norm'] = LogNorm(vmin=vmin,vmax=vmax)
+        cs = m.scatter(x,y,**cs_kwargs)
     else:
-        cs = m.pcolor(x,y,data,axes=ax,edgecolors='none',antialiased=False,
-                vmin=vmin,vmax=vmax,cmap=cmap)
+        cs_kwargs = {'axes':ax,'edgecolors':'none','antialiased':False,
+                'vmin':vmin,'vmax':vmax,'cmap':cmap}
+        if log_plot: cs_kwargs['norm'] = LogNorm(vmin=vmin,vmax=vmax)
+        cs = m.pcolor(x,y,data,**cs_kwargs)
 
     ppl.setp(ax.get_xticklines(),visible=False)
     ppl.setp(ax.get_yticklines(),visible=False)
@@ -606,9 +644,10 @@ def plot_map_continuous(lat,lon,data,data_mask,png_file,
     cax = fig.add_axes(cax_rect,frameon=False) # setup colorbar axes
 
     # Plot the colorbar.
-    cb = fig.colorbar(cs, cax=cax, orientation='horizontal')
+    cb_kwargs = {'cax':cax,'orientation':'horizontal'}
+    if log_plot: cb_kwargs['ticks'] = LogLocator(subs=range(10))
+    cb = fig.colorbar(cs, **cb_kwargs)
     ppl.setp(cax.get_xticklabels(),fontsize=font_scale*9)
-    ppl.setp(cax.get_xticklines(),visible=False)
 
     # Colourbar title
     cax_title = ppl.setp(cax,title=cbar_title)
@@ -744,6 +783,7 @@ def plot_map_discrete(lat,lon,data,data_mask,png_file,
     cmap          = plot_style_options['cmap']
     doScatterPlot = plot_style_options['scatterPlot']
     pointSize     = plot_style_options['pointSize']
+    font_scale    = plot_style_options['font_scale']
     dpi           = plot_style_options['dpi']
 
     '''
