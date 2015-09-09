@@ -50,21 +50,23 @@ class Dataset_Options:
             }
     data['baseline_cmask_seviri_cloud_mask'] = data['baseline_cmask_goes_nop_cloud_mask']
 
+
     data['goesnp_ctype_cloud_phase'] = {
             'name':'Cloud Phase',
             'quantity':'cloud phase',
             'discrete':True,
-            'values':(0,1,2,3),
+            'values':(0,1,2,3,4,5),
             'mask_values':[],
             'units': None,
-            'fill_boundaries':[-0.5,0.5,1.5,2.5,3.5],
-            'fill_colours':['#00ff00','#00ffff','#ff0000','w'],
-            'tick_names':['confident clear','probably clear','probably cloudy','confident cloudy'],
+            'fill_boundaries':[-0.5,  0.5,  1.5,  2.5,  3.5,  4.5,  5.5],
+            'fill_colours':['#000000','#02BCFC','#01FB00','#006701','#FAF900','#F600FD'],
+            'tick_names':['clear','water','supercooled','mixed','ice','unknown'],
             'cmap':None,
-            'meridian_color':'black',
-            'coastline_color':'black',
-            'country_color':'black'
+            'coastline_color':'cyan',
+            'country_color':'magenta',
+            'meridian_color':'yellow'
             }
+
     data['goesnp_ctype_cloud_type'] = {
             'name':'Cloud Type',
             'quantity':'cloud type',
