@@ -140,6 +140,7 @@ class GOES_NetCDF():
         def __init__(selfd,L1_obj,dataname):
 
             selfd.dataname = dataname
+            LOG.debug("selfd.dataname = {}".format(selfd.dataname))
 
             selfd.dset_obj = L1_obj.file_obj.variables[dataname]
 
@@ -423,7 +424,7 @@ def set_plot_styles(goes_obj, data_obj, dataset_options, options, plot_nav_optio
         if options.logscale:
             LOG.warning('The dataset {} does not support log scaling, plotting on a linear scale'
                     .format(options.dataset))
-            plot_style_options['log_plot'] = False
+        plot_style_options['log_plot'] = False
 
 
     if plot_style_options['plotMin'] > plot_style_options['plotMax']:
@@ -570,6 +571,12 @@ def plot_map_continuous(lat,lon,data,data_mask,png_file,
                 format(cbar_title))
         return -1
 
+    # Construct particular data mask
+    particular_mask = np.zeros(data.shape,dtype=np.bool)
+    for ranges in dataset_options['mask_ranges']:
+        print "Mask range is {}".format(ranges)
+        particular_mask += ma.masked_inside(data,ranges[0],ranges[1]).mask
+
     LOG.debug("data array has shape {}".format(data.shape))
     data_aspect = float(data.shape[1])/float(data.shape[0])
     LOG.debug("data array has aspect {}".format(data_aspect))
@@ -618,6 +625,8 @@ def plot_map_continuous(lat,lon,data,data_mask,png_file,
 
     LOG.debug('data.shape = {}'.format(data.shape))
     LOG.debug('data_mask.shape = {}'.format(data_mask.shape))
+
+    data_mask = data_mask + particular_mask
     data = ma.array(data[::stride,::stride],mask=data_mask[::stride,::stride])
 
     LOG.debug('plotLims = {},{}'.format(plotLims[0],plotLims[1]))
@@ -758,8 +767,6 @@ def plot_image_discrete(self,data,data_mask,png_file,dataset,**plot_options):
 def plot_map_discrete(lat,lon,data,data_mask,png_file,
         dataset_options,plot_nav_options,plot_style_options):
         
-    #dataset_options = geocat_l2_data.Dataset_Options.data[dataset]
-
     # Copy the plot options to local variables
     llcrnrx        = plot_nav_options['llcrnrx']
     llcrnry        = plot_nav_options['llcrnry']
@@ -795,6 +802,12 @@ def plot_map_discrete(lat,lon,data,data_mask,png_file,
         LOG.warn("Entire {} dataset is missing, aborting".\
                 format(dataset))
         return -1
+
+    # Construct particular data mask
+    particular_mask = np.zeros(data.shape,dtype=np.bool)
+    for vals in dataset_options['mask_values']:
+        print "Mask value is {}".format(vals)
+        particular_mask += ma.masked_equal(data,vals).mask
 
     LOG.debug("data array has shape {}".format(data.shape))
     data_aspect = float(data.shape[1])/float(data.shape[0])
@@ -853,6 +866,8 @@ def plot_map_discrete(lat,lon,data,data_mask,png_file,
 
     LOG.debug('data.shape = {}'.format(data.shape))
     LOG.debug('data_mask.shape = {}'.format(data_mask.shape))
+
+    data_mask = data_mask + particular_mask
     data = ma.array(data[::stride,::stride],mask=data_mask[::stride,::stride])
 
     LOG.debug('plotLims = {},{}'.format(plotLims[0],plotLims[1]))

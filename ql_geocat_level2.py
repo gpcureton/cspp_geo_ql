@@ -472,7 +472,8 @@ def main():
         LOG.debug('options.dataset name: {}'.format(options.dataset))
         
         data_obj = goes_l2_obj.Dataset(goes_l2_obj,options.dataset)
-    except :
+    except Exception:
+        LOG.warn(traceback.format_exc())
         LOG.error('"{}" is not a valid options.dataset in {}, aborting.'.format(options.dataset,options.input_file))
         goes_l2_obj.close()
         return 1

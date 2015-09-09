@@ -429,7 +429,8 @@ def main():
     if options.list_datasets:
         LOG.info('Datasets in {}:'.format(options.input_file))
         for dsets in goes_l1_obj.datanames:
-            print "\t{}".format(dsets)
+            if "imager" in dsets or "pixel" in dsets:
+                print "\t{}".format(dsets)
         goes_l1_obj.close()
         return 0
 
@@ -439,7 +440,8 @@ def main():
         LOG.debug('options.dataset name: {}'.format(options.dataset))
 
         data_obj = goes_l1_obj.Dataset(goes_l1_obj,options.dataset)
-    except :
+    except Exception:
+        LOG.warn(traceback.format_exc())
         LOG.error('"{}" is not a valid options.dataset in {}, aborting.'.format(options.dataset,options.input_file))
         goes_l1_obj.close()
         return 1
@@ -477,7 +479,11 @@ def main():
         dataset = string.replace(options.dataset,dataset_prefix,"")
 
     # Get the dataset options
-    dataset_options = geocat_l1_data.Dataset_Options.data[dataset]
+    try:
+        dataset_options = geocat_l1_data.Dataset_Options.data[dataset]
+    except KeyError:
+        dataset_options = geocat_l1_data.Dataset_Options.data['unknown']
+        dataset_options['name'] = dataset
 
     # Set the navigation 
     plot_nav_options = set_plot_navigation(lats,lons,goes_l1_obj,options)
