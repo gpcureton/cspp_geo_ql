@@ -826,7 +826,7 @@ def plot_map_discrete(lat,lon,data,data_mask,png_file,
 
     # Granule axis title
     ax_title = ppl.setp(ax,title=title)
-    ppl.setp(ax_title,fontsize=font_scale*12)
+    ppl.setp(ax_title,fontsize=font_scale*11)
     ppl.setp(ax_title,family="sans-serif")
 
     fill_colours = dataset_options['fill_colours']
