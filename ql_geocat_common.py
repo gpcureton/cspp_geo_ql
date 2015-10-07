@@ -585,7 +585,7 @@ def plot_map_continuous(lat,lon,data,data_mask,png_file,
     fig = Figure(figsize=(image_size[0],image_size[1]))
     canvas = FigureCanvas(fig)
 
-    fig.text(0.98, 0.01, "CSPP Geo L2 v1.0beta",fontsize=font_scale*5, color='gray',ha='right',va='bottom',alpha=0.9)
+    fig.text(0.98, 0.01, plot_style_options['version'],fontsize=font_scale*5, color='gray',ha='right',va='bottom',alpha=0.9)
 
     # Create main axes instance, leaving room for colorbar at bottom,
     # and also get the Bbox of the axes instance
@@ -817,7 +817,7 @@ def plot_map_discrete(lat,lon,data,data_mask,png_file,
     fig = Figure(figsize=(image_size[0],image_size[1]))
     canvas = FigureCanvas(fig)
 
-    fig.text(0.98, 0.01, "CSPP Geo L2 v0.1",fontsize=font_scale*5, color='gray',ha='right',va='bottom',alpha=0.9)
+    fig.text(0.98, 0.01, plot_style_options['version'],fontsize=font_scale*5, color='gray',ha='right',va='bottom',alpha=0.9)
 
     # Create main axes instance, leaving room for colorbar at bottom,
     # and also get the Bbox of the axes instance

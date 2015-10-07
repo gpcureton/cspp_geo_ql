@@ -140,7 +140,7 @@ def _argparse():
     description = '''Create a plot of a level-1 dataset from a geocat netCDF4 file.'''
 
     usage = "usage: %prog [mandatory args] [options]"
-    version = 0.1
+    version = 'CSPP Geo GEOCAT v1.0beta'
 
     parser = argparse.ArgumentParser(
                                      description=description
@@ -387,6 +387,12 @@ def _argparse():
                       ERROR: -v=WARNING -vv=INFO -vvv=DEBUG'''
                       )
 
+    parser.add_argument('-V', '--version', 
+                      action='version',
+                      version=version,
+                      help='''Print the CSPP Geo package version'''
+                      )
+
 
     args = parser.parse_args()
 
@@ -403,7 +409,7 @@ def _argparse():
 
     logging.basicConfig(level=level, format=console_logFormat, datefmt=date_format)
 
-    return args
+    return args,version
 
 
 def main():
@@ -412,7 +418,7 @@ def main():
     '''
 
     # Read in the options
-    options = _argparse()
+    options,cspp_geo_version = _argparse()
 
     output_file  = options.output_file
     outputFilePrefix  = options.outputFilePrefix
@@ -491,6 +497,8 @@ def main():
     # Set the plot styles 
     plot_style_options = set_plot_styles(goes_l1_obj,data_obj,
             dataset_options,options,plot_nav_options)
+
+    plot_style_options['version'] = cspp_geo_version
 
     # Get pointers to the desired plotting routines
     plot_image = plot_style_options['plot_image']
