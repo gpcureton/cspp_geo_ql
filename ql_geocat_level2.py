@@ -140,8 +140,9 @@ def _argparse():
 
     map_res_choice = ['c','l','i']
 
-    goes_choice = ['goes_e','goes_w']
-    goes_region_choice = ['FD','CONUS','MESO']
+    #goes_choice = ['goes_e','goes_w']
+    #goes_region_choice = ['FD','CONUS','MESO']
+    goes_region_choice = ['FD']
 
     defaults = {
                 'input_file':None,
@@ -309,13 +310,13 @@ def _argparse():
                       [default: '{}']""".format(defaults["cbar_axis"])
                       )
 
-    parser.add_argument('--satellite',
-                      action="store",
-                      dest="satellite",
-                      type=str,
-                      choices=goes_choice,
-                      help="""The GOES satellite."""
-                      )
+    #parser.add_argument('--satellite',
+                      #action="store",
+                      #dest="satellite",
+                      #type=str,
+                      #choices=goes_choice,
+                      #help="""The GOES satellite."""
+                      #)
 
     parser.add_argument('--scatter_plot',
                       action="store_true",
@@ -479,7 +480,7 @@ def main():
         
         data_obj = goes_l2_obj.Dataset(goes_l2_obj,options.dataset)
     except Exception:
-        LOG.warn(traceback.format_exc())
+        LOG.debug(traceback.format_exc())
         LOG.error('"{}" is not a valid options.dataset in {}, aborting.'.format(options.dataset,options.input_file))
         goes_l2_obj.close()
         return 1
@@ -519,7 +520,10 @@ def main():
         dataset_options['name'] = dataset
 
     # Set the navigation 
-    plot_nav_options = set_plot_navigation(lats,lons,goes_l2_obj,options)
+    if options.unnavigated :
+        plot_nav_options = {}
+    else:
+        plot_nav_options = set_plot_navigation(lats,lons,goes_l2_obj,options)
 
     # Set the plot styles 
     plot_style_options = set_plot_styles(goes_l2_obj,data_obj,
