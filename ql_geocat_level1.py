@@ -55,18 +55,18 @@ import copy
 
 from scipy import vectorize
 
-import matplotlib
-import matplotlib.cm as cm
-from matplotlib.colors import ListedColormap
-from matplotlib.figure import Figure
+#import matplotlib
+#import matplotlib.cm as cm
+#from matplotlib.colors import ListedColormap
+#from matplotlib.figure import Figure
 
-matplotlib.use('Agg')
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+#matplotlib.use('Agg')
+#from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 # This must come *after* the backend is specified.
-import matplotlib.pyplot as ppl
+#import matplotlib.pyplot as ppl
 
-from mpl_toolkits.basemap import Basemap
+#from mpl_toolkits.basemap import Basemap
 
 from pyhdf.SD import SD
 from netCDF4 import Dataset
@@ -350,7 +350,7 @@ def _argparse():
                       action="store",
                       dest="plot_title",
                       type=str,
-                      help='''The plot title. 
+                      help='''The plot title. Must be placed in double quotes.
                       '''
                       )
 
@@ -358,7 +358,7 @@ def _argparse():
                       action="store",
                       dest="cbar_title",
                       type=str,
-                      help='''The colourbar title. 
+                      help='''The colourbar title. Must be placed in double quotes.
                       '''
                       )
 
