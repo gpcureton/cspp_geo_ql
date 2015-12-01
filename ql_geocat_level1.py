@@ -55,19 +55,6 @@ import copy
 
 from scipy import vectorize
 
-#import matplotlib
-#import matplotlib.cm as cm
-#from matplotlib.colors import ListedColormap
-#from matplotlib.figure import Figure
-
-#matplotlib.use('Agg')
-#from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-
-# This must come *after* the backend is specified.
-#import matplotlib.pyplot as ppl
-
-#from mpl_toolkits.basemap import Basemap
-
 from pyhdf.SD import SD
 from netCDF4 import Dataset
 from netCDF4 import num2date
@@ -76,6 +63,7 @@ import geocat_l1_data
 from ql_geocat_common import GOES_NetCDF
 from ql_geocat_common import set_plot_navigation_bm as set_plot_navigation
 from ql_geocat_common import set_plot_styles
+from ql_geocat_common import list_l1_datasets as list_datasets
 
 # every module should have a LOG object
 LOG = logging.getLogger(__file__)
@@ -115,7 +103,7 @@ def _argparse():
                 'input_file':None,
                 'dataset':'channel_2_reflectance',
                 'stride':1,
-                'lon_0':None,
+                #'lon_0':None,
                 'llcrnrx':None,
                 'llcrnry':None,
                 'urcrnrx':None,
@@ -153,44 +141,48 @@ def _argparse():
                       action='store',
                       dest='input_file',
                       type=str,
-                      help='''The fully qualified path to a single geocat level-1 HDF4 input file.'''
+                      help='''The fully qualified path to a single geocat level-1 
+                      NetCDF4 input file.'''
                       )
 
     parser.add_argument(
                       action="store",
                       dest="dataset",
-                      default=defaults["dataset"],
                       type=str,
-                      help='''The geocat level-1 dataset to plot.
-                              [default: {}]
-                           '''.format(defaults["dataset"])
+                      help='''The geocat level-1 dataset to plot. See the 
+                      --list_datasets option for available datasets.'''
                       )
 
     # Optional arguments 
 
-    parser.add_argument('-S','--stride',
+    parser.add_argument('--cbar_axis',
                       action="store",
-                      dest="stride",
-                      default=defaults["stride"],
-                      type=int,
-                      help='''Sample every STRIDE rows and columns in the data. 
-                      [default: {}]'''.format(defaults["stride"])
+                      dest="cbar_axis",
+                      default=defaults["cbar_axis"],
+                      type=float,
+                      nargs=4,
+                      metavar=('LEFT', 'BOTTOM', 'WIDTH', 'HEIGHT'),
+                      help="""Set the colorbar axes within the figure at position 
+                      [*left*, *bottom*, *width*, *height*] where all quantities 
+                      are in the range [0..1].[default: '{}']
+                      """.format(defaults["cbar_axis"])
                       )
 
-    parser.add_argument('--plotMin',
+    parser.add_argument('--cbar_title',
                       action="store",
-                      dest="plotMin",
-                      default=defaults["plotMin"],
-                      type=float,
-                      help="Minimum value to plot.".format(defaults["plotMin"])
+                      dest="cbar_title",
+                      type=str,
+                      help='''The colourbar title. Must be placed in double quotes.
+                      '''
                       )
 
-    parser.add_argument('--plotMax',
+    parser.add_argument('--cmap',
                       action="store",
-                      dest="plotMax",
-                      default=defaults["plotMax"],
-                      type=float,
-                      help="Maximum value to plot.".format(defaults["plotMax"])
+                      dest="cmap",
+                      default=defaults["cmap"],
+                      type=str,
+                      help="""The matplotlib colormap to use. See the --list_datasets
+                      option for details and default values."""
                       )
 
     parser.add_argument('-d','--dpi',
@@ -203,22 +195,13 @@ def _argparse():
                       [default: {}]'''.format(defaults["dpi"])
                       )
 
-    parser.add_argument('--lon_0',
+    parser.add_argument('--font_scale',
                       action="store",
-                      dest="lon_0",
+                      dest="font_scale",
+                      default=defaults["font_scale"],
                       type=float,
-                      help="Center the plot over this longitude."
-                      )
-
-    parser.add_argument('--viewport',
-                      action="store",
-                      dest="viewport",
-                      type=float,
-                      nargs=4,
-                      metavar=('LLCRNRX', 'LLCRNRY', 'URCRNRX', 'URCRNRY'),
-                      help="""Lower-left and upper-right coordinates 
-                      [*llcrnrx*, *llcrnry*, *urcrnrx*, *urcrnry*] of the projection 
-                      viewport, in the range [-0.5,+0.5] (for navigated plots only)"""
+                      help='''The scale factor to apply to the default font size
+                      for the plot labels. [default: {}]'''.format(defaults["font_scale"])
                       )
 
     parser.add_argument('--image_size',
@@ -232,6 +215,41 @@ def _argparse():
                       in inches. [default: '{}']""".format(defaults["image_size"])
                       )
 
+    parser.add_argument('--list_datasets',
+                      action="store_true",
+                      dest="list_datasets",
+                      default=defaults["list_datasets"],
+                      help="""List the available datasets, the default colormap
+                      and whether a log plot is created by default, then exit. 
+                      The required dataset may be given as 'None'."""
+                      )
+
+    parser.add_argument('--logscale',
+                      action="store_true",
+                      dest="logscale",
+                      help="""Plot the dataset using a logarithmic scale."""
+                      )
+
+    #parser.add_argument('--lon_0',
+                      #action="store",
+                      #dest="lon_0",
+                      #type=float,
+                      #help="Center the plot over this longitude."
+                      #)
+
+    parser.add_argument('--map_axis',
+                      action="store",
+                      dest="map_axis",
+                      default=defaults["map_axis"],
+                      type=float,
+                      nargs=4,
+                      metavar=('LEFT', 'BOTTOM', 'WIDTH', 'HEIGHT'),
+                      help="""Set the map axes within the figure at position 
+                      [*left*, *bottom*, *width*, *height*] where all quantities 
+                      are in the range [0..1].[default: '{}']
+                      """.format(defaults["map_axis"])
+                      )
+
     parser.add_argument('-m','--map_res',
                       action="store",
                       dest="map_res",
@@ -243,123 +261,10 @@ def _argparse():
                       [default: '{}']""".format(defaults["map_res"])
                       )
 
-    parser.add_argument('--region',
-                      action="store",
-                      dest="region",
-                      default=defaults["region"],
-                      type=str,
-                      choices=goes_region_choice,
-                      help="""The GOES region. 
-                      [default: '{}']""".format(defaults["region"])
-                      )
-
-    parser.add_argument('--map_axis',
-                      action="store",
-                      dest="map_axis",
-                      default=defaults["map_axis"],
-                      type=float,
-                      nargs=4,
-                      metavar=('LEFT', 'BOTTOM', 'WIDTH', 'HEIGHT'),
-                      help="""Set the map axes at position [*left*, *bottom*, *width*, *height*] 
-                      where all quantities are in fractions of figure width and height. 
-                      [default: '{}']""".format(defaults["map_axis"])
-                      )
-
-    parser.add_argument('--cbar_axis',
-                      action="store",
-                      dest="cbar_axis",
-                      default=defaults["cbar_axis"],
-                      type=float,
-                      nargs=4,
-                      metavar=('LEFT', 'BOTTOM', 'WIDTH', 'HEIGHT'),
-                      help="""Set the colorbar axes at position [*left*, *bottom*, *width*, *height*] 
-                      where all quantities are in fractions of figure width and height. 
-                      [default: '{}']""".format(defaults["cbar_axis"])
-                      )
-
-    #parser.add_argument('--satellite',
-                      #action="store",
-                      #dest="satellite",
-                      #type=str,
-                      #choices=goes_choice,
-                      #help="""The GOES satellite."""
-                      #)
-
-    parser.add_argument('--scatter_plot',
-                      action="store_true",
-                      dest="doScatterPlot",
-                      default=defaults["scatter_plot"],
-                      help="Generate the plot using a scatterplot approach."
-                      )
-
-    parser.add_argument('--unnavigated',
-                      action="store_true",
-                      dest="unnavigated",
-                      default=defaults["unnavigated"],
-                      help="Do not navigate the data, just display the image."
-                      )
-
-    parser.add_argument('--list_datasets',
-                      action="store_true",
-                      dest="list_datasets",
-                      default=defaults["list_datasets"],
-                      help="""List the available datasets, and exit. Specify the
-                      required dataset as 'None'."""
-                      )
-
-    parser.add_argument('--logscale',
-                      action="store_true",
-                      dest="logscale",
-                      help="""Plot the dataset using a logarithmic scale."""
-                      )
-
     parser.add_argument('--no_logscale',
                       action="store_true",
                       dest="no_logscale",
                       help="""Plot the dataset using a linear scale."""
-                      )
-
-    parser.add_argument('-P','--pointSize',
-                      action="store",
-                      dest="pointSize",
-                      default=defaults["pointSize"],
-                      type=float,
-                      help='''Size of the plot point used to represent each pixel. 
-                      [default: {}]'''.format(defaults["pointSize"])
-                      )
-
-    parser.add_argument('--font_scale',
-                      action="store",
-                      dest="font_scale",
-                      default=defaults["font_scale"],
-                      type=float,
-                      help='''The scale factor to apply to the default font size
-                      for the plot labels. [default: {}]'''.format(defaults["font_scale"])
-                      )
-
-    parser.add_argument('--cmap',
-                      action="store",
-                      dest="cmap",
-                      default=defaults["cmap"],
-                      type=str,
-                      help="""The matplotlib colormap to use. 
-                      [default: '{}']""".format(defaults["cmap"])
-                      )
-
-    parser.add_argument('--plot_title',
-                      action="store",
-                      dest="plot_title",
-                      type=str,
-                      help='''The plot title. Must be placed in double quotes.
-                      '''
-                      )
-
-    parser.add_argument('--cbar_title',
-                      action="store",
-                      dest="cbar_title",
-                      type=str,
-                      help='''The colourbar title. Must be placed in double quotes.
-                      '''
                       )
 
     parser.add_argument('-o','--output_file',
@@ -378,6 +283,92 @@ def _argparse():
                       type=str,
                       help="""String to prepend to the automatically generated 
                       png names. [default: {}]""".format(defaults["outputFilePrefix"])
+                      )
+
+    parser.add_argument('--plotMin',
+                      action="store",
+                      dest="plotMin",
+                      default=defaults["plotMin"],
+                      type=float,
+                      help="Minimum value to plot.".format(defaults["plotMin"])
+                      )
+
+    parser.add_argument('--plotMax',
+                      action="store",
+                      dest="plotMax",
+                      default=defaults["plotMax"],
+                      type=float,
+                      help="Maximum value to plot.".format(defaults["plotMax"])
+                      )
+
+    parser.add_argument('--plot_title',
+                      action="store",
+                      dest="plot_title",
+                      type=str,
+                      help='''The plot title. Must be placed in double quotes.
+                      '''
+                      )
+
+    parser.add_argument('-P','--pointSize',
+                      action="store",
+                      dest="pointSize",
+                      default=defaults["pointSize"],
+                      type=float,
+                      help='''Size of the plot point used to represent each pixel. 
+                      [default: {}]'''.format(defaults["pointSize"])
+                      )
+
+    parser.add_argument('--region',
+                      action="store",
+                      dest="region",
+                      default=defaults["region"],
+                      type=str,
+                      choices=goes_region_choice,
+                      help="""The GOES region. 
+                      [default: '{}']""".format(defaults["region"])
+                      )
+
+    #parser.add_argument('--satellite',
+                      #action="store",
+                      #dest="satellite",
+                      #type=str,
+                      #choices=goes_choice,
+                      #help="""The GOES satellite."""
+                      #)
+
+    parser.add_argument('--scatter_plot',
+                      action="store_true",
+                      dest="doScatterPlot",
+                      default=defaults["scatter_plot"],
+                      help="Generate the plot using a scatterplot approach."
+                      )
+
+    parser.add_argument('-S','--stride',
+                      action="store",
+                      dest="stride",
+                      default=defaults["stride"],
+                      type=int,
+                      help='''Sample every STRIDE rows and columns in the data. 
+                      [default: {}]'''.format(defaults["stride"])
+                      )
+
+    parser.add_argument('--unnavigated',
+                      action="store_true",
+                      dest="unnavigated",
+                      default=defaults["unnavigated"],
+                      help="Do not navigate the data, just display the image."
+                      )
+
+    parser.add_argument('--viewport',
+                      action="store",
+                      dest="viewport",
+                      type=float,
+                      nargs=4,
+                      metavar=('LLCRNRX', 'LLCRNRY', 'URCRNRX', 'URCRNRY'),
+                      help="""Lower-left and upper-right coordinates 
+                      [*llcrnrx*, *llcrnry*, *urcrnrx*, *urcrnry*] of the projection 
+                      viewport, where the default is [-0.5,-0.5,+0.5,+0.5] for a 
+                      full disk (for navigated plots only)"""
                       )
 
     parser.add_argument("-v", "--verbosity",
@@ -434,12 +425,20 @@ def main():
 
     # If we want to list the datasets, do that here and exit
     if options.list_datasets:
-        LOG.info('Datasets in {}:'.format(options.input_file))
-        for dsets in goes_l1_obj.datanames:
-            if "imager" in dsets or "pixel" in dsets:
-                print "\t{}".format(dsets)
-        goes_l1_obj.close()
+        list_datasets(options,goes_l1_obj,geocat_l1_data)
         return 0
+
+    # Strip spacecraft specific information from the channel name...
+    dataset_prefix = ""
+    try:
+        chan_convention = goes_l1_obj.attrs['Channel_Number_Convention']
+        if 'instrument-native' in chan_convention:
+            spacecraft = goes_l1_obj.attrs['Spacecraft_Name']
+            dataset_prefix = "{}_".format(string.replace(spacecraft.lower(),'-','_'))
+    except KeyError:
+        LOG.warn('No Channel_Number_Convention attribute in in \n\t{}, is this a level-2 file? Aborting.\n'
+                .format(options.input_file))
+        return 1
 
     # Read in the desired dataset
     try:
@@ -450,7 +449,7 @@ def main():
     except Exception:
         LOG.debug(traceback.format_exc())
         LOG.error('"{}" is not a valid options.dataset in {}, aborting.'.format(options.dataset,options.input_file))
-        goes_l1_obj.close()
+        goes_l1_obj.close_netcdf_file()
         return 1
 
     # Use the solar zenith angle to mask off-disk pixels...
@@ -464,7 +463,7 @@ def main():
     else: 
         data_mask = np.zeros(data.shape,dtype='bool')
 
-    goes_l1_obj.close()
+    goes_l1_obj.close_netcdf_file()
     
     # Determine the filename
     file_suffix = "{}".format(options.dataset)
@@ -478,12 +477,6 @@ def main():
     if output_file!=None and outputFilePrefix!=None :
         output_file = "{}_{}.png".format(outputFilePrefix,file_suffix)
 
-    # Determine the correct key for the channel name...
-    chan_convention = goes_l1_obj.attrs['Channel_Number_Convention']
-    if 'instrument-native' in chan_convention:
-        spacecraft = goes_l1_obj.attrs['Spacecraft_Name']
-        dataset_prefix = "{}_".format(string.replace(spacecraft.lower(),'-','_'))
-        dataset = string.replace(options.dataset,dataset_prefix,"")
 
     # Get the dataset options
     try:

@@ -82,6 +82,7 @@ class Dataset_Options:
             'country_color':'magenta',
             'meridian_color':'yellow'
             }
+
     data['ACHA_mode_7_goes_cloud_emissivity'] = {
                 'name':'ACHA mode 7 GOES Cloud Emissivity',
                 'quantity':'emissivity',
@@ -96,6 +97,7 @@ class Dataset_Options:
                 'cmap':cm.cubehelix,
                 'n_levels':256
                 }
+
     data['ACHA_mode_7_goes_cloud_optical_depth_vis'] = {
                 'name':'ACHA mode 7 GOES Cloud Optical Depth (visible)',
                 'quantity':'optical depth',
@@ -110,6 +112,7 @@ class Dataset_Options:
                 'cmap':cm.cubehelix,
                 'n_levels':256
                 }
+
     data['ACHA_mode_7_goes_cloud_particle_effective_radius'] = {
                 'name':'ACHA mode 7 GOES Cloud Particle Effective Radius',
                 'quantity':'effective radius',
@@ -124,6 +127,7 @@ class Dataset_Options:
                 'cmap':cm.cubehelix,
                 'n_levels':256
                 }
+
     data['ACHA_mode_7_goes_cloud_top_height'] = {
                 'name':'ACHA mode 7 GOES Cloud Top Height',
                 'quantity':'height',
@@ -138,6 +142,7 @@ class Dataset_Options:
                 'cmap':cm.cubehelix,
                 'n_levels':256
                 }
+
     data['ACHA_mode_7_goes_cloud_top_pressure'] = {
                 'name':'ACHA mode 7 GOES Cloud Top Pressure',
                 'quantity':'pressure',
@@ -152,6 +157,7 @@ class Dataset_Options:
                 'cmap':cm.cubehelix_r,
                 'n_levels':256
                 }
+
     data['ACHA_mode_7_goes_cloud_top_temperature'] = {
                 'name':'ACHA mode 7 GOES Cloud Top Temperature)',
                 'quantity':'temperature',
@@ -166,6 +172,7 @@ class Dataset_Options:
                 'cmap':cm.cubehelix_r,
                 'n_levels':256
                 }
+
     data['DCOMP_mode_3_cloud_albedo'] = {
                 'name':'DCOMP mode 3 Cloud Albedo',
                 'quantity':'albedo',
@@ -180,6 +187,7 @@ class Dataset_Options:
                 'cmap':cm.cubehelix,
                 'n_levels':256
                 }
+
     data['DCOMP_mode_3_cloud_spherical_albedo'] = {
                 'name':'DCOMP mode 3 Cloud Spherical Albedo',
                 'quantity':'albedo',
@@ -194,6 +202,7 @@ class Dataset_Options:
                 'cmap':cm.cubehelix,
                 'n_levels':256
                 }
+
     data['DCOMP_mode_3_cloud_ice_water_path'] = {
                 'name':'DCOMP mode 3 Cloud Ice Water Path',
                 'quantity':'ice water path',
@@ -208,6 +217,7 @@ class Dataset_Options:
                 'cmap':cm.cubehelix,
                 'n_levels':256
                 }
+
     data['DCOMP_mode_3_cloud_liquid_water_path'] = {
                 'name':'DCOMP mode 3 Cloud Liquid Water Path',
                 'quantity':'liquid water path',
@@ -222,6 +232,7 @@ class Dataset_Options:
                 'cmap':cm.cubehelix,
                 'n_levels':256
                 }
+
     data['DCOMP_mode_3_cloud_optical_depth_vis'] = {
                 'name':'DCOMP mode 3 Cloud Optical Depth (visible)',
                 'quantity':'optical depth',
@@ -236,6 +247,7 @@ class Dataset_Options:
                 'cmap':cm.cubehelix,
                 'n_levels':256
                 }
+
     data['DCOMP_mode_3_cloud_particle_effective_radius'] = {
                 'name':'DCOMP mode 3 Cloud Particle Effective Radius',
                 'quantity':'effective radius',
@@ -250,6 +262,7 @@ class Dataset_Options:
                 'cmap':cm.cubehelix,
                 'n_levels':256
                 }
+
     data['goesr_fog_IFR_fog_probability'] = {
                 'name':'goesr fog IFR Fog Probability',
                 'quantity':'probability',
@@ -264,6 +277,7 @@ class Dataset_Options:
                 'cmap':g2_cmaps.geocat_colormaps.get_cmap_fog(cmap_break=0.37),
                 'n_levels':256
                 }
+
     data['goesr_fog_LIFR_fog_probability'] = {
                 'name':'goesr fog LIFR Fog Probability',
                 'quantity':'probability',
@@ -278,6 +292,7 @@ class Dataset_Options:
                 'cmap':g2_cmaps.geocat_colormaps.get_cmap_fog(cmap_break=0.30),
                 'n_levels':256
                 }
+
     data['goesr_fog_MVFR_fog_probability'] = {
                 'name':'goesr fog MVFR Fog Probability',
                 'quantity':'probability',
@@ -292,6 +307,7 @@ class Dataset_Options:
                 'cmap':g2_cmaps.geocat_colormaps.get_cmap_fog(cmap_break=0.55),
                 'n_levels':256
                 }
+
     data['unknown'] = {
                 'name':None,
                 'quantity':None,

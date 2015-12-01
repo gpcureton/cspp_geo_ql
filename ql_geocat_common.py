@@ -98,6 +98,7 @@ class GOES_HDF4():
 
             selfd.dset_obj = L1_obj.file_obj.select(dataname)
 
+
             selfd.attrs = selfd.dset_obj.attributes()
             selfd.dset = ma.masked_equal(selfd.dset_obj.get(),selfd.attrs['_FillValue'])
             
@@ -151,7 +152,7 @@ class GOES_NetCDF():
             selfd.dset = ma.masked_equal(selfd.dset_obj[:],selfd.attrs['_FillValue'])
             #selfd.dset = selfd.dset * selfd.attrs['scale_factor'] + selfd.attrs['add_offset']
 
-    def close(self):
+    def close_netcdf_file(self):
         LOG.debug('Closing {}...'.format(self.input_file))
         self.file_obj.close()
 
@@ -261,7 +262,14 @@ def set_plot_navigation_bm(lats,lons,goes_l1_obj, options):
     subsatellite_longitude = goes_l1_obj.attrs['Subsatellite_Longitude']
     LOG.info('File subsatellite_Longitude = {:6.1f}'.format(subsatellite_longitude))
 
+    #print "lon_0 = {}".format(options.lon_0)
+    #if options.lon_0 == None:
+        #lon_0 = subsatellite_longitude
+    #else:
+        #lon_0 = options.lon_0
+
     m1 = Basemap(projection='geos',lon_0=subsatellite_longitude,resolution=None)
+    #m1 = Basemap(projection='geos',lon_0=lon_0,resolution=None)
 
     plot_nav_options = {}
 
@@ -405,6 +413,151 @@ def set_plot_navigation_bm(lats,lons,goes_l1_obj, options):
     plot_nav_options['is_full_disk'] = is_full_disk
 
     return plot_nav_options
+
+
+def list_l1_datasets(options,goes_obj,geocat_data):
+    # Get some spacecraft and dataset name info...
+    dataset_prefix = ""
+    try:
+        chan_convention = goes_obj.attrs['Channel_Number_Convention']
+        if 'instrument-native' in chan_convention:
+            spacecraft = goes_obj.attrs['Spacecraft_Name']
+            dataset_prefix = "{}_".format(string.replace(spacecraft.lower(),'-','_'))
+    except KeyError:
+        LOG.warn('No Channel_Number_Convention attribute in in \n\t{}, is this a level-2 file? Aborting.\n'
+                .format(options.input_file))
+        return
+
+    lines =  len(goes_obj.file_obj.dimensions['lines'])
+    elements =  len(goes_obj.file_obj.dimensions['elements'])
+
+    # If we want to list the datasets, do that here and exit
+    if options.list_datasets:
+        LOG.info('Datasets in {}:\n'.format(options.input_file))
+
+        goes_l1_obj_dsets = []
+        goes_l1_obj_dsets_len = 0
+        goes_l1_obj_cmaps = []
+        goes_l1_obj_logscale = []
+
+
+        for dsets in goes_obj.datanames:
+            data_obj = goes_obj.Dataset(goes_obj,dsets)
+            ndim = data_obj.dset.ndim
+            if ndim != 2:
+                continue
+            rows = data_obj.dset.shape[0]
+            cols = data_obj.dset.shape[1]
+            del(data_obj)
+
+            if (rows==lines) and (cols==elements):
+                dataset = string.replace(dsets,dataset_prefix,"")
+                goes_l1_obj_dsets.append(dsets)
+
+                if len(goes_l1_obj_dsets[-1]) > goes_l1_obj_dsets_len:
+                    goes_l1_obj_dsets_len = len(goes_l1_obj_dsets[-1])
+
+                try:
+                    dataset_options = geocat_data.Dataset_Options.data[dsets]
+                except KeyError:
+                    dataset_options = geocat_data.Dataset_Options.data['unknown']
+                    dataset_options['name'] = dsets
+
+                if dataset_options['cmap']!=None:
+                    cmap_name = dataset_options['cmap'].name
+                else:
+                    #cmap_name = dataset_options['fill_colours']
+                    cmap_name = "Custom"
+
+                goes_l1_obj_cmaps.append(cmap_name)
+
+                try:
+                    logscale = dataset_options['logscale']
+                except KeyError:
+                    logscale = False
+
+                goes_l1_obj_logscale.append(logscale)
+
+        goes_obj.close_netcdf_file()
+
+        str_format = "\t{{:{}s}} | {{:{}s}} | {{}}".format(str(goes_l1_obj_dsets_len),
+                str(len("Colormap Name")))
+        #print str_format
+        print str_format.format("Dataset Name","Colormap Name","Logscale")
+        print "\t{}".format("_"*(goes_l1_obj_dsets_len + 3 + len("Colormap Name")+ 3 + len("Logscale")))
+        for dataset,cmap_name,logscale in zip(goes_l1_obj_dsets,goes_l1_obj_cmaps,goes_l1_obj_logscale):
+            print str_format.format(dataset,cmap_name,logscale)
+
+        print """\n\tSee http://matplotlib.org/users/colormaps.html for colormap details."""
+
+
+def list_l2_datasets(options,goes_obj,geocat_data):
+    # If we want to list the datasets, do that here and exit
+
+    if 'Channel_Number_Convention' in goes_obj.attrs.keys():
+        LOG.warn('Channel_Number_Convention attribute in \n\t{}, is this a level-1 file? Aborting.\n'
+                .format(options.input_file))
+        return
+
+    lines =  len(goes_obj.file_obj.dimensions['lines'])
+    elements =  len(goes_obj.file_obj.dimensions['elements'])
+
+    if options.list_datasets:
+        LOG.info('Datasets in {}:\n'.format(options.input_file))
+
+        goes_l2_obj_dsets = []
+        goes_l2_obj_dsets_len = 0
+        goes_l2_obj_cmaps = []
+        goes_l2_obj_logscale = []
+
+        for dsets in goes_obj.datanames:
+            data_obj = goes_obj.Dataset(goes_obj,dsets)
+            ndim = data_obj.dset.ndim
+            if ndim != 2:
+                continue
+            rows = data_obj.dset.shape[0]
+            cols = data_obj.dset.shape[1]
+            del(data_obj)
+
+            if (rows==lines) and (cols==elements):
+                goes_l2_obj_dsets.append(dsets)
+
+                if len(goes_l2_obj_dsets[-1]) > goes_l2_obj_dsets_len:
+                    goes_l2_obj_dsets_len = len(goes_l2_obj_dsets[-1])
+
+                try:
+                    dataset_options = geocat_data.Dataset_Options.data[dsets]
+                except KeyError:
+                    dataset_options = geocat_data.Dataset_Options.data['unknown']
+                    dataset_options['name'] = dsets
+
+                if dataset_options['cmap']!=None:
+                    cmap_name = dataset_options['cmap'].name
+                else:
+                    #cmap_name = dataset_options['fill_colours']
+                    cmap_name = "Custom"
+
+                goes_l2_obj_cmaps.append(cmap_name)
+
+                try:
+                    logscale = dataset_options['logscale']
+                except KeyError:
+                    logscale = False
+
+                goes_l2_obj_logscale.append(logscale)
+
+        goes_obj.close_netcdf_file()
+
+        str_format = "\t{{:{}s}} | {{:{}s}} | {{}}".format(str(goes_l2_obj_dsets_len),
+                str(len("Colormap Name")))
+        #print str_format
+        print str_format.format("Dataset Name","Colormap Name","Logscale")
+        print "\t{}".format("_"*(goes_l2_obj_dsets_len + 3 + len("Colormap Name")+ 3 + len("Logscale")))
+        for dataset,cmap_name,logscale in zip(goes_l2_obj_dsets,goes_l2_obj_cmaps,goes_l2_obj_logscale):
+            print str_format.format(dataset,cmap_name,logscale)
+
+        print """\n\tSee http://matplotlib.org/users/colormaps.html for colormap details."""
+
 
 
 def set_plot_styles(goes_obj, data_obj, dataset_options, options, plot_nav_options):
