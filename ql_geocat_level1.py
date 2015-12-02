@@ -435,6 +435,7 @@ def main():
         if 'instrument-native' in chan_convention:
             spacecraft = goes_l1_obj.attrs['Spacecraft_Name']
             dataset_prefix = "{}_".format(string.replace(spacecraft.lower(),'-','_'))
+            dataset = string.replace(options.dataset,dataset_prefix,"")
     except KeyError:
         LOG.warn('No Channel_Number_Convention attribute in in \n\t{}, is this a level-2 file? Aborting.\n'
                 .format(options.input_file))

@@ -452,14 +452,18 @@ def list_l1_datasets(options,goes_obj,geocat_data):
 
             if (rows==lines) and (cols==elements):
                 dataset = string.replace(dsets,dataset_prefix,"")
+
                 goes_l1_obj_dsets.append(dsets)
 
                 if len(goes_l1_obj_dsets[-1]) > goes_l1_obj_dsets_len:
                     goes_l1_obj_dsets_len = len(goes_l1_obj_dsets[-1])
 
+                # Correct dataset options rely on the generic "dataset" rather 
+                # than "dsets"
                 try:
-                    dataset_options = geocat_data.Dataset_Options.data[dsets]
+                    dataset_options = geocat_data.Dataset_Options.data[dataset]
                 except KeyError:
+                    LOG.warn('Unknown generic dataset "{}", defaulting to "unknown"'.format(dsets))
                     dataset_options = geocat_data.Dataset_Options.data['unknown']
                     dataset_options['name'] = dsets
 
@@ -528,6 +532,7 @@ def list_l2_datasets(options,goes_obj,geocat_data):
                 try:
                     dataset_options = geocat_data.Dataset_Options.data[dsets]
                 except KeyError:
+                    #LOG.warn('Unknown generic dataset "{}", defaulting to "unknown"'.format(dsets))
                     dataset_options = geocat_data.Dataset_Options.data['unknown']
                     dataset_options['name'] = dsets
 
