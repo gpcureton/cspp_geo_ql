@@ -159,7 +159,7 @@ class Dataset_Options:
                 }
 
     data['ACHA_mode_7_goes_cloud_top_temperature'] = {
-                'name':'ACHA mode 7 GOES Cloud Top Temperature)',
+                'name':'ACHA mode 7 GOES Cloud Top Temperature',
                 'quantity':'temperature',
                 'discrete':False,
                 'values':[180.,295.],
