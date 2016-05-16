@@ -9,7 +9,7 @@ Preconditions:
     * pyhdf HDF4 python module
 
 Optional:
-    * 
+    *
 
 Minimum commandline:
 
@@ -136,12 +136,12 @@ def _argparse():
                                      )
 
     # Mandatory/positional arguments
-    
+
     parser.add_argument(
                       action='store',
                       dest='input_file',
                       type=str,
-                      help='''The fully qualified path to a single geocat level-1 
+                      help='''The fully qualified path to a single geocat level-1
                       NetCDF4 input file.'''
                       )
 
@@ -149,11 +149,11 @@ def _argparse():
                       action="store",
                       dest="dataset",
                       type=str,
-                      help='''The geocat level-1 dataset to plot. See the 
+                      help='''The geocat level-1 dataset to plot. See the
                       --list_datasets option for available datasets.'''
                       )
 
-    # Optional arguments 
+    # Optional arguments
 
     parser.add_argument('--cbar_axis',
                       action="store",
@@ -162,8 +162,8 @@ def _argparse():
                       type=float,
                       nargs=4,
                       metavar=('LEFT', 'BOTTOM', 'WIDTH', 'HEIGHT'),
-                      help="""Set the colorbar axes within the figure at position 
-                      [*left*, *bottom*, *width*, *height*] where all quantities 
+                      help="""Set the colorbar axes within the figure at position
+                      [*left*, *bottom*, *width*, *height*] where all quantities
                       are in the range [0..1].[default: '{}']
                       """.format(defaults["cbar_axis"])
                       )
@@ -190,8 +190,8 @@ def _argparse():
                       dest="dpi",
                       default='200.',
                       type=float,
-                      help='''The resolution in dots per inch of the output 
-                      png file. 
+                      help='''The resolution in dots per inch of the output
+                      png file.
                       [default: {}]'''.format(defaults["dpi"])
                       )
 
@@ -220,7 +220,7 @@ def _argparse():
                       dest="list_datasets",
                       default=defaults["list_datasets"],
                       help="""List the available datasets, the default colormap
-                      and whether a log plot is created by default, then exit. 
+                      and whether a log plot is created by default, then exit.
                       The required dataset may be given as 'None'."""
                       )
 
@@ -244,8 +244,8 @@ def _argparse():
                       type=float,
                       nargs=4,
                       metavar=('LEFT', 'BOTTOM', 'WIDTH', 'HEIGHT'),
-                      help="""Set the map axes within the figure at position 
-                      [*left*, *bottom*, *width*, *height*] where all quantities 
+                      help="""Set the map axes within the figure at position
+                      [*left*, *bottom*, *width*, *height*] where all quantities
                       are in the range [0..1].[default: '{}']
                       """.format(defaults["map_axis"])
                       )
@@ -256,8 +256,8 @@ def _argparse():
                       default=defaults["map_res"],
                       type=str,
                       choices=map_res_choice,
-                      help="""The map coastline resolution. Possible values are 
-                      'c' (coarse),'l' (low) and 'i' (intermediate). 
+                      help="""The map coastline resolution. Possible values are
+                      'c' (coarse),'l' (low) and 'i' (intermediate).
                       [default: '{}']""".format(defaults["map_res"])
                       )
 
@@ -272,7 +272,7 @@ def _argparse():
                       dest="output_file",
                       default=defaults["output_file"],
                       type=str,
-                      help='''The filename of the output png file. 
+                      help='''The filename of the output png file.
                       '''
                       )
 
@@ -281,7 +281,7 @@ def _argparse():
                       dest="outputFilePrefix",
                       default=defaults["outputFilePrefix"],
                       type=str,
-                      help="""String to prepend to the automatically generated 
+                      help="""String to prepend to the automatically generated
                       png names. [default: {}]""".format(defaults["outputFilePrefix"])
                       )
 
@@ -314,7 +314,7 @@ def _argparse():
                       dest="pointSize",
                       default=defaults["pointSize"],
                       type=float,
-                      help='''Size of the plot point used to represent each pixel. 
+                      help='''Size of the plot point used to represent each pixel.
                       [default: {}]'''.format(defaults["pointSize"])
                       )
 
@@ -324,7 +324,7 @@ def _argparse():
                       default=defaults["region"],
                       type=str,
                       choices=goes_region_choice,
-                      help="""The GOES region. 
+                      help="""The GOES region.
                       [default: '{}']""".format(defaults["region"])
                       )
 
@@ -348,7 +348,7 @@ def _argparse():
                       dest="stride",
                       default=defaults["stride"],
                       type=int,
-                      help='''Sample every STRIDE rows and columns in the data. 
+                      help='''Sample every STRIDE rows and columns in the data.
                       [default: {}]'''.format(defaults["stride"])
                       )
 
@@ -365,21 +365,21 @@ def _argparse():
                       type=float,
                       nargs=4,
                       metavar=('LLCRNRX', 'LLCRNRY', 'URCRNRX', 'URCRNRY'),
-                      help="""Lower-left and upper-right coordinates 
-                      [*llcrnrx*, *llcrnry*, *urcrnrx*, *urcrnry*] of the projection 
-                      viewport, where the default is [-0.5,-0.5,+0.5,+0.5] for a 
+                      help="""Lower-left and upper-right coordinates
+                      [*llcrnrx*, *llcrnry*, *urcrnrx*, *urcrnry*] of the projection
+                      viewport, where the default is [-0.5,-0.5,+0.5,+0.5] for a
                       full disk (for navigated plots only)"""
                       )
 
     parser.add_argument("-v", "--verbosity",
                       dest='verbosity',
-                      action="count", 
+                      action="count",
                       default=2,
-                      help='''each occurrence increases verbosity 1 level from 
+                      help='''each occurrence increases verbosity 1 level from
                       ERROR: -v=WARNING -vv=INFO -vvv=DEBUG'''
                       )
 
-    parser.add_argument('-V', '--version', 
+    parser.add_argument('-V', '--version',
                       action='version',
                       version=version,
                       help='''Print the CSPP Geo package version'''
@@ -432,14 +432,16 @@ def main():
     dataset_prefix = ""
     try:
         chan_convention = goes_l1_obj.attrs['Channel_Number_Convention']
+        LOG.info('chan_convention: {}'.format(chan_convention))
         if 'instrument-native' in chan_convention:
             spacecraft = goes_l1_obj.attrs['Spacecraft_Name']
             dataset_prefix = "{}_".format(string.replace(spacecraft.lower(),'-','_'))
             dataset = string.replace(options.dataset,dataset_prefix,"")
     except KeyError:
-        LOG.warn('No Channel_Number_Convention attribute in in \n\t{}, is this a level-2 file? Aborting.\n'
+        LOG.warn('No Channel_Number_Convention attribute in in \n\t{}, is this a level-2 file?\n'
                 .format(options.input_file))
-        return 1
+        dataset = options.dataset
+        #return 1
 
     # Read in the desired dataset
     try:
@@ -461,11 +463,11 @@ def main():
             data_mask = np.ones(data.shape,dtype='bool')
         else:
             data_mask = data.mask
-    else: 
+    else:
         data_mask = np.zeros(data.shape,dtype='bool')
 
     goes_l1_obj.close_netcdf_file()
-    
+
     # Determine the filename
     file_suffix = "{}".format(options.dataset)
 
@@ -478,21 +480,27 @@ def main():
     if output_file!=None and outputFilePrefix!=None :
         output_file = "{}_{}.png".format(outputFilePrefix,file_suffix)
 
+    if 'goes' in  goes_l1_obj.attrs['Sensor_Name']:
+        sat_obj = geocat_l1_data.Satellite.factory('GOES_NOP')
+    elif 'himawari' in  goes_l1_obj.attrs['Sensor_Name']:
+        sat_obj = geocat_l1_data.Satellite.factory('Himawari')
+    else:
+        LOG.error("Unsupported satellite {}, aborting...".format(goes_l1_obj.attrs['Sensor_Name']))
 
     # Get the dataset options
     try:
-        dataset_options = geocat_l1_data.Dataset_Options.data[dataset]
+        dataset_options = sat_obj.data[dataset]
     except KeyError:
-        dataset_options = geocat_l1_data.Dataset_Options.data['unknown']
+        dataset_options = sat_obj.data['unknown']
         dataset_options['name'] = dataset
 
-    # Set the navigation 
+    # Set the navigation
     if options.unnavigated :
         plot_nav_options = {}
     else:
         plot_nav_options = set_plot_navigation(lats,lons,goes_l1_obj,options)
 
-    # Set the plot styles 
+    # Set the plot styles
     plot_style_options = set_plot_styles(goes_l1_obj,data_obj,
             dataset_options,options,plot_nav_options)
 
@@ -516,4 +524,4 @@ def main():
 
 
 if __name__=='__main__':
-    sys.exit(main())  
+    sys.exit(main())

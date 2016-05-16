@@ -22,19 +22,23 @@ Copyright (c) 2012-2013 University of Wisconsin Regents. All rights reserved.
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from copy import copy
 from matplotlib import cm as cm
 import geocat_colormaps as g1_cmaps
 
-class Dataset_Options:
-    """
-    This class contains static data for the interpretation of the various  
-    geocat discrete and continuous datasets.
-    """
 
-    data = {}
+class Satellite(object):
 
-    data['channel_2_reflectance'] = {
-                'name':'Channel 2 reflectance',
+    def factory(type):
+        if type == "GOES_NOP": 
+            return GOES_NOP()
+        if type == "Himawari": 
+            return Himawari()
+        assert 0, "Bad satellite creation: " + type
+ 
+    factory = staticmethod(factory)
+
+    refl_dict = {
                 'quantity':'reflectance',
                 'discrete':False,
                 'values':[0.,100.],
@@ -47,22 +51,7 @@ class Dataset_Options:
                 'cmap':cm.gray,
                 'n_levels':256
                 }
-    data['channel_7_reflectance'] = {
-                'name':'Channel 7 reflectance',
-                'quantity':'reflectance',
-                'discrete':False,
-                'values':[0.,75.],
-                'mask_ranges':[],
-                'logscale':False,
-                'units': '%',
-                'coastline_color':'cyan',
-                'country_color':'magenta',
-                'meridian_color':'yellow',
-                'cmap':cm.gray,
-                'n_levels':256
-                }
-    data['channel_7_emissivity'] = {
-                'name':'Channel 7 emissivity',
+    emis_dict = {
                 'quantity':'emissivity',
                 'discrete':False,
                 'values':[0.,30.],
@@ -75,8 +64,7 @@ class Dataset_Options:
                 'cmap':cm.gray,
                 'n_levels':256
                 }
-    data['channel_7_brightness_temperature'] = {
-                'name':'Channel 7 brightness temperature',
+    bt_dict  =  {
                 'quantity':'brightness temperature',
                 'discrete':False,
                 'values':[None,None],
@@ -89,48 +77,148 @@ class Dataset_Options:
                 'cmap':cm.gray_r,
                 'n_levels':256
                 }
-    data['channel_9_brightness_temperature'] = {
-                'name':'Channel 9 brightness temperature',
-                'quantity':'brightness temperature',
+
+    common_data = {}
+    common_data['pixel_ecosystem_type'] = {
+                'name':'pixel ecosystem type',
+                'quantity':'ecosystem type',
+                'discrete':False,
+                'values':[None,None],
+                #'mask_values':[],
+                'mask_ranges':[],
+                'logscale':False,
+                'units': None,
+                'coastline_color':'cyan',
+                'country_color':'magenta',
+                'meridian_color':'yellow',
+                #'cmap':g1_cmaps.geocat_colormaps.get_cmap_ice_water(),
+                'cmap':cm.cubehelix,
+                'n_levels':256
+                }
+    common_data['pixel_latitude'] = {
+                'name':'pixel latitude',
+                'quantity':'latitude',
                 'discrete':False,
                 'values':[None,None],
                 'mask_ranges':[],
                 'logscale':False,
-                'units': 'K',
+                'units': None,
                 'coastline_color':'cyan',
                 'country_color':'magenta',
                 'meridian_color':'yellow',
-                'cmap':cm.gray_r,
+                'cmap':cm.Blues,
                 'n_levels':256
                 }
-    data['channel_14_brightness_temperature'] = {
-                'name':'Channel 14 brightness temperature',
-                'quantity':'brightness temperature',
+    common_data['pixel_longitude'] = {
+                'name':'pixel longitude',
+                'quantity':'longitude',
                 'discrete':False,
                 'values':[None,None],
                 'mask_ranges':[],
                 'logscale':False,
-                'units': 'K',
+                'units': 'degrees',
                 'coastline_color':'cyan',
                 'country_color':'magenta',
                 'meridian_color':'yellow',
-                'cmap':cm.gray_r,
+                'cmap':cm.Blues,
                 'n_levels':256
                 }
-    data['channel_16_brightness_temperature'] = {
-                'name':'Channel 16 brightness temperature',
-                'quantity':'brightness temperature',
+    common_data['pixel_relative_azimuth_angle'] = {
+                'name':'pixel relative azimuth angle',
+                'quantity':'relative azimuth angle',
                 'discrete':False,
                 'values':[None,None],
                 'mask_ranges':[],
                 'logscale':False,
-                'units': 'K',
+                'units': 'degrees',
                 'coastline_color':'cyan',
                 'country_color':'magenta',
                 'meridian_color':'yellow',
-                'cmap':cm.gray_r,
+                'cmap':cm.Blues,
                 'n_levels':256
                 }
+    common_data['pixel_satellite_zenith_angle'] = {
+                'name':'pixel satellite zenith angle',
+                'quantity':'satellite zenith angle',
+                'discrete':False,
+                'values':[None,None],
+                'mask_ranges':[],
+                'logscale':False,
+                'units': 'degrees',
+                'coastline_color':'cyan',
+                'country_color':'magenta',
+                'meridian_color':'yellow',
+                'cmap':cm.Blues,
+                'n_levels':256
+                }
+    common_data['pixel_solar_zenith_angle'] = {
+                'name':'pixel solar zenith angle',
+                'quantity':'solar zenith angle',
+                'discrete':False,
+                'values':[None,None],
+                'mask_ranges':[],
+                'logscale':False,
+                'units': 'degrees',
+                'coastline_color':'cyan',
+                'country_color':'magenta',
+                'meridian_color':'yellow',
+                'cmap':cm.Blues,
+                'n_levels':256
+                }
+    common_data['pixel_surface_type'] = {
+                'name':'pixel surface type',
+                'quantity':'surface type',
+                'discrete':False,
+                'values':[None,None],
+                #'mask_values':[],
+                'mask_ranges':[],
+                'logscale':False,
+                'units': None,
+                'coastline_color':'cyan',
+                'country_color':'magenta',
+                'meridian_color':'yellow',
+                #'cmap':g1_cmaps.geocat_colormaps.get_cmap_ice_water(),
+                'cmap':cm.cubehelix,
+                'n_levels':256
+                }
+    common_data['unknown'] = {
+                'name':None,
+                'quantity':None,
+                'discrete':False,
+                'values':[None,None],
+                'mask_ranges':[],
+                'logscale':False,
+                'units': None,
+                'coastline_color':'cyan',
+                'country_color':'magenta',
+                'meridian_color':'yellow',
+                'cmap':cm.cubehelix,
+                'n_levels':256
+                }
+
+
+class GOES_NOP(Satellite):
+
+    geocat_reflectance_channels = [2, 7]
+    geocat_emissivity_channels = [7]
+    geocat_btemperature_channels = [7, 9, 14, 16]
+
+    data = {}
+    #data = {'channel_{}_reflectance'.format(chan):copy(Satellite.refl_dict) for chan in geocat_reflectance_channels}
+    #_ = [data['channel_{}_reflectance'.format(chan)].update(name='Channel {} reflectance'.format(chan)) 
+            #for chan in geocat_reflectance_channels]
+
+    for chan in geocat_reflectance_channels:
+        data['channel_{}_reflectance'.format(chan)] = copy(Satellite.refl_dict)
+        data['channel_{}_reflectance'.format(chan)]['name'] = 'Channel {} reflectance'.format(chan)
+    for chan in geocat_emissivity_channels:
+        data['channel_{}_emissivity'.format(chan)] = copy(Satellite.emis_dict)
+        data['channel_{}_emissivity'.format(chan)]['name'] = 'Channel {} emissivity'.format(chan)
+    for chan in geocat_btemperature_channels:
+        data['channel_{}_brightness_temperature'.format(chan)] = copy(Satellite.bt_dict)
+        data['channel_{}_brightness_temperature'.format(chan)]['name'] = 'Channel {} brightness temperature'.format(chan)
+
+    data.update(Satellite.common_data)
 
     data['imager_channel_1_reflectance'] = data['channel_2_reflectance']
     data['imager_channel_2_brightness_temperature'] = data['channel_7_brightness_temperature']
@@ -147,122 +235,34 @@ class Dataset_Options:
         data[dsets]['name'] = " ".join(dsets.split('_')[1:])
 
 
-    data['pixel_ecosystem_type'] = {
-                'name':'pixel ecosystem type',
-                'quantity':'ecosystem type',
-                'discrete':False,
-                'values':[None,None],
-                #'mask_values':[],
-                'mask_ranges':[],
-                'logscale':False,
-                'units': None,
-                'coastline_color':'cyan',
-                'country_color':'magenta',
-                'meridian_color':'yellow',
-                #'cmap':g1_cmaps.geocat_colormaps.get_cmap_ice_water(),
-                'cmap':cm.cubehelix,
-                'n_levels':256
-                }
-    data['pixel_latitude'] = {
-                'name':'pixel latitude',
-                'quantity':'latitude',
-                'discrete':False,
-                'values':[None,None],
-                'mask_ranges':[],
-                'logscale':False,
-                'units': None,
-                'coastline_color':'cyan',
-                'country_color':'magenta',
-                'meridian_color':'yellow',
-                'cmap':cm.Blues,
-                'n_levels':256
-                }
-    data['pixel_longitude'] = {
-                'name':'pixel longitude',
-                'quantity':'longitude',
-                'discrete':False,
-                'values':[None,None],
-                'mask_ranges':[],
-                'logscale':False,
-                'units': 'degrees',
-                'coastline_color':'cyan',
-                'country_color':'magenta',
-                'meridian_color':'yellow',
-                'cmap':cm.Blues,
-                'n_levels':256
-                }
-    data['pixel_relative_azimuth_angle'] = {
-                'name':'pixel relative azimuth angle',
-                'quantity':'relative azimuth angle',
-                'discrete':False,
-                'values':[None,None],
-                'mask_ranges':[],
-                'logscale':False,
-                'units': 'degrees',
-                'coastline_color':'cyan',
-                'country_color':'magenta',
-                'meridian_color':'yellow',
-                'cmap':cm.Blues,
-                'n_levels':256
-                }
-    data['pixel_satellite_zenith_angle'] = {
-                'name':'pixel satellite zenith angle',
-                'quantity':'satellite zenith angle',
-                'discrete':False,
-                'values':[None,None],
-                'mask_ranges':[],
-                'logscale':False,
-                'units': 'degrees',
-                'coastline_color':'cyan',
-                'country_color':'magenta',
-                'meridian_color':'yellow',
-                'cmap':cm.Blues,
-                'n_levels':256
-                }
-    data['pixel_solar_zenith_angle'] = {
-                'name':'pixel solar zenith angle',
-                'quantity':'solar zenith angle',
-                'discrete':False,
-                'values':[None,None],
-                'mask_ranges':[],
-                'logscale':False,
-                'units': 'degrees',
-                'coastline_color':'cyan',
-                'country_color':'magenta',
-                'meridian_color':'yellow',
-                'cmap':cm.Blues,
-                'n_levels':256
-                }
-    data['pixel_surface_type'] = {
-                'name':'pixel surface type',
-                'quantity':'surface type',
-                'discrete':False,
-                'values':[None,None],
-                #'mask_values':[],
-                'mask_ranges':[],
-                'logscale':False,
-                'units': None,
-                'coastline_color':'cyan',
-                'country_color':'magenta',
-                'meridian_color':'yellow',
-                #'cmap':g1_cmaps.geocat_colormaps.get_cmap_ice_water(),
-                'cmap':cm.cubehelix,
-                'n_levels':256
-                }
-    data['unknown'] = {
-                'name':None,
-                'quantity':None,
-                'discrete':False,
-                'values':[None,None],
-                'mask_ranges':[],
-                'logscale':False,
-                'units': None,
-                'coastline_color':'cyan',
-                'country_color':'magenta',
-                'meridian_color':'yellow',
-                'cmap':cm.cubehelix,
-                'n_levels':256
-                }
+class Himawari(Satellite):
+
+    geocat_reflectance_channels = [1, 2, 3, 5, 6, 7]
+    geocat_emissivity_channels = [7]
+    geocat_btemperature_channels = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+
+
+    data = {}
+    #data = {'channel_{}_reflectance'.format(chan):copy(Satellite.refl_dict) for chan in geocat_reflectance_channels}
+    #_ = [data['channel_{}_reflectance'.format(chan)].update(name='Channel {} reflectance'.format(chan)) 
+            #for chan in geocat_reflectance_channels]
+
+    for chan in geocat_reflectance_channels:
+        data['channel_{}_reflectance'.format(chan)] = copy(Satellite.refl_dict)
+        data['channel_{}_reflectance'.format(chan)]['name'] = 'Channel {} reflectance'.format(chan)
+    for chan in geocat_emissivity_channels:
+        data['channel_{}_emissivity'.format(chan)] = copy(Satellite.emis_dict)
+        data['channel_{}_emissivity'.format(chan)]['name'] = 'Channel {} emissivity'.format(chan)
+    for chan in geocat_btemperature_channels:
+        data['channel_{}_brightness_temperature'.format(chan)] = copy(Satellite.bt_dict)
+        data['channel_{}_brightness_temperature'.format(chan)]['name'] = 'Channel {} brightness temperature'.format(chan)
+
+    data.update(Satellite.common_data)
+
+
+
+
+class Navigation(Satellite):
 
     navigation = {}
 

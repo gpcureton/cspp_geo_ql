@@ -78,7 +78,7 @@ class GOES_HDF4():
 
         LOG.debug('Opening {} with GOES_HDF4...'.format(self.input_file))
         self.file_obj = SD(self.input_file)
-        
+
         # Dictionary of file object attributes
         self.attrs = self.file_obj.attributes()
 
@@ -101,7 +101,7 @@ class GOES_HDF4():
 
             selfd.attrs = selfd.dset_obj.attributes()
             selfd.dset = ma.masked_equal(selfd.dset_obj.get(),selfd.attrs['_FillValue'])
-            
+
             selfd.dset = selfd.dset * selfd.attrs['scale_factor'] + selfd.attrs['add_offset']
 
     def close(self):
@@ -127,7 +127,7 @@ class GOES_NetCDF():
         self.attrs = {}
         for attr_key in self.file_obj.ncattrs():
             self.attrs[attr_key] = getattr(self.file_obj,attr_key)
-        
+
         # Ordered dictionary of dataset objects
         self.data_dict = self.file_obj.variables
 
@@ -148,7 +148,7 @@ class GOES_NetCDF():
             selfd.attrs = {}
             for attr_key in selfd.dset_obj.ncattrs():
                 selfd.attrs[attr_key] = getattr(selfd.dset_obj,attr_key)
-            
+
             selfd.dset = ma.masked_equal(selfd.dset_obj[:],selfd.attrs['_FillValue'])
             #selfd.dset = selfd.dset * selfd.attrs['scale_factor'] + selfd.attrs['add_offset']
 
@@ -303,7 +303,7 @@ def set_plot_navigation_bm(lats,lons,goes_l1_obj, options):
         LOG.info("This image is NOT full disk")
 
         # Get the north, south, east and west edges of the plot region (in map
-        # coordinates). Check that the edge isnn't all missing, and step towards 
+        # coordinates). Check that the edge isnn't all missing, and step towards
         # center as necessary.
 
         # Western edge
@@ -316,7 +316,7 @@ def set_plot_navigation_bm(lats,lons,goes_l1_obj, options):
             if (len(x_compressed) == 0):
                 LOG.debug("No Disk! ({})".format(we_col))
                 we_col = we_col + 1
-            else : 
+            else :
                 LOG.debug("Checking complete: we_col = {}".format(we_col))
                 break
 
@@ -333,7 +333,7 @@ def set_plot_navigation_bm(lats,lons,goes_l1_obj, options):
             if (len(x_compressed) == 0):
                 LOG.debug("No Disk! ({})".format(ee_col))
                 ee_col = ee_col - 1
-            else : 
+            else :
                 LOG.debug("Checking complete: ee_col = {}".format(ee_col))
                 break
 
@@ -349,7 +349,7 @@ def set_plot_navigation_bm(lats,lons,goes_l1_obj, options):
             if (len(y_compressed) == 0):
                 LOG.debug("No Disk! ({})".format(ne_row))
                 ne_row = ne_row + 1
-            else : 
+            else :
                 LOG.debug("Checking complete: ne_row = {}".format(ne_row))
                 break
 
@@ -365,7 +365,7 @@ def set_plot_navigation_bm(lats,lons,goes_l1_obj, options):
             if (len(y_compressed) == 0):
                 LOG.debug("No Disk! ({})".format(se_row))
                 se_row = se_row - 1
-            else : 
+            else :
                 LOG.debug("Checking complete: se_row = {}".format(se_row))
                 break
 
@@ -405,9 +405,9 @@ def set_plot_navigation_bm(lats,lons,goes_l1_obj, options):
 
 
     plot_nav_options['llcrnrx'] = plot_nav_options['llcrnrx_map'] if options.viewport is None else options.viewport[0] * plot_nav_options['extent_x']
-    plot_nav_options['llcrnry'] = plot_nav_options['llcrnry_map'] if options.viewport is None else options.viewport[1] * plot_nav_options['extent_y'] 
-    plot_nav_options['urcrnrx'] = plot_nav_options['urcrnrx_map'] if options.viewport is None else options.viewport[2] * plot_nav_options['extent_x'] 
-    plot_nav_options['urcrnry'] = plot_nav_options['urcrnry_map'] if options.viewport is None else options.viewport[3] * plot_nav_options['extent_y'] 
+    plot_nav_options['llcrnry'] = plot_nav_options['llcrnry_map'] if options.viewport is None else options.viewport[1] * plot_nav_options['extent_y']
+    plot_nav_options['urcrnrx'] = plot_nav_options['urcrnrx_map'] if options.viewport is None else options.viewport[2] * plot_nav_options['extent_x']
+    plot_nav_options['urcrnry'] = plot_nav_options['urcrnry_map'] if options.viewport is None else options.viewport[3] * plot_nav_options['extent_y']
 
     plot_nav_options['lon_0'] = subsatellite_longitude
     plot_nav_options['is_full_disk'] = is_full_disk
@@ -426,7 +426,14 @@ def list_l1_datasets(options,goes_obj,geocat_data):
     except KeyError:
         LOG.warn('No Channel_Number_Convention attribute in in \n\t{}, is this a level-2 file? Aborting.\n'
                 .format(options.input_file))
-        return
+        #return
+
+    if 'goes' in  goes_obj.attrs['Sensor_Name']:
+        sat_obj = geocat_data.Satellite.factory('GOES_NOP')
+    elif 'himawari' in  goes_obj.attrs['Sensor_Name']:
+        sat_obj = geocat_data.Satellite.factory('Himawari')
+    else:
+        LOG.error("Unsupported satellite {}, aborting...".format(goes_l1_obj.attrs['Sensor_Name']))
 
     lines =  len(goes_obj.file_obj.dimensions['lines'])
     elements =  len(goes_obj.file_obj.dimensions['elements'])
@@ -458,14 +465,12 @@ def list_l1_datasets(options,goes_obj,geocat_data):
                 if len(goes_l1_obj_dsets[-1]) > goes_l1_obj_dsets_len:
                     goes_l1_obj_dsets_len = len(goes_l1_obj_dsets[-1])
 
-                # Correct dataset options rely on the generic "dataset" rather 
-                # than "dsets"
                 try:
-                    dataset_options = geocat_data.Dataset_Options.data[dataset]
+                    dataset_options = sat_obj.data[dataset]
                 except KeyError:
                     LOG.warn('Unknown generic dataset "{}", defaulting to "unknown"'.format(dsets))
-                    dataset_options = geocat_data.Dataset_Options.data['unknown']
-                    dataset_options['name'] = dsets
+                    dataset_options = sat_obj.data['unknown']
+                    dataset_options['name'] = dataset
 
                 if dataset_options['cmap']!=None:
                     cmap_name = dataset_options['cmap'].name
@@ -501,11 +506,19 @@ def list_l2_datasets(options,goes_obj,geocat_data):
     if 'Channel_Number_Convention' in goes_obj.attrs.keys():
         LOG.warn('Channel_Number_Convention attribute in \n\t{}, is this a level-1 file? Aborting.\n'
                 .format(options.input_file))
-        return
+        #return
+
+    if 'goes' in  goes_obj.attrs['Sensor_Name']:
+        sat_obj = geocat_data.Satellite.factory('GOES_NOP')
+    elif 'himawari' in  goes_obj.attrs['Sensor_Name']:
+        sat_obj = geocat_data.Satellite.factory('Himawari')
+    else:
+        LOG.error("Unsupported satellite {}, aborting...".format(goes_l1_obj.attrs['Sensor_Name']))
 
     lines =  len(goes_obj.file_obj.dimensions['lines'])
     elements =  len(goes_obj.file_obj.dimensions['elements'])
 
+    # If we want to list the datasets, do that here and exit
     if options.list_datasets:
         LOG.info('Datasets in {}:\n'.format(options.input_file))
 
@@ -530,11 +543,11 @@ def list_l2_datasets(options,goes_obj,geocat_data):
                     goes_l2_obj_dsets_len = len(goes_l2_obj_dsets[-1])
 
                 try:
-                    dataset_options = geocat_data.Dataset_Options.data[dsets]
+                    dataset_options = sat_obj.data[dataset]
                 except KeyError:
-                    #LOG.warn('Unknown generic dataset "{}", defaulting to "unknown"'.format(dsets))
-                    dataset_options = geocat_data.Dataset_Options.data['unknown']
-                    dataset_options['name'] = dsets
+                    LOG.warn('Unknown generic dataset "{}", defaulting to "unknown"'.format(dsets))
+                    dataset_options = sat_obj.data['unknown']
+                    dataset_options['name'] = dataset
 
                 if dataset_options['cmap']!=None:
                     cmap_name = dataset_options['cmap'].name
@@ -650,7 +663,7 @@ def set_plot_styles(goes_obj, data_obj, dataset_options, options, plot_nav_optio
 
     plot_style_options['plotLims'] = [plot_style_options['plotMin'],plot_style_options['plotMax']]
 
-    # If this is a navigated plot, set which axes parallels and meridians get 
+    # If this is a navigated plot, set which axes parallels and meridians get
     # labeled at...
     if plot_nav_options != {}:
         if plot_nav_options['is_full_disk']:
@@ -857,9 +870,9 @@ def plot_map_continuous(lat,lon,data,data_mask,png_file,
     m.drawstates(ax=ax,color=country_color,linewidth = 0.2)
     m.fillcontinents(color='0.',zorder=0)
 
-    drawparallels(m,np.arange( -90, 91,30), color = meridian_color, 
+    drawparallels(m,np.arange( -90, 91,30), color = meridian_color,
             linewidth = 0.5,fontsize=font_scale*6,labels=parallel_axes) # left, right, top or bottom
-    drawmeridians(m,np.arange(-180,180,30), color = meridian_color, 
+    drawmeridians(m,np.arange(-180,180,30), color = meridian_color,
             linewidth = 0.5,fontsize=font_scale*6,labels=meridian_axes) # left, right, top or bottom
 
     LOG.debug('data.shape = {}'.format(data.shape))
@@ -1029,7 +1042,7 @@ def plot_image_discrete(data,data_mask,png_file,
 
 def plot_map_discrete(lat,lon,data,data_mask,png_file,
         dataset_options,plot_nav_options,plot_style_options):
-        
+
     # Copy the plot options to local variables
     llcrnrx        = plot_nav_options['llcrnrx']
     llcrnry        = plot_nav_options['llcrnry']
@@ -1123,9 +1136,9 @@ def plot_map_discrete(lat,lon,data,data_mask,png_file,
     m.drawstates(ax=ax,color=country_color,linewidth = 0.2)
     m.fillcontinents(color='0.',zorder=0)
 
-    drawparallels(m,np.arange( -90, 91,30), color = meridian_color, 
+    drawparallels(m,np.arange( -90, 91,30), color = meridian_color,
             linewidth = 0.5,fontsize=font_scale*6,labels=parallel_axes) # left, right, top or bottom
-    drawmeridians(m,np.arange(-180,180,30), color = meridian_color, 
+    drawmeridians(m,np.arange(-180,180,30), color = meridian_color,
             linewidth = 0.5,fontsize=font_scale*6,labels=meridian_axes) # left, right, top or bottom
 
     LOG.debug('data.shape = {}'.format(data.shape))
