@@ -501,7 +501,8 @@ def list_l1_datasets(options,goes_obj,geocat_data):
 
 
 def list_l2_datasets(options,goes_obj,geocat_data):
-    # If we want to list the datasets, do that here and exit
+    # Get some spacecraft and dataset name info...
+    dataset_prefix = ""
 
     if 'Channel_Number_Convention' in goes_obj.attrs.keys():
         LOG.warn('Channel_Number_Convention attribute in \n\t{}, is this a level-1 file? Aborting.\n'
@@ -537,6 +538,8 @@ def list_l2_datasets(options,goes_obj,geocat_data):
             del(data_obj)
 
             if (rows==lines) and (cols==elements):
+                dataset = string.replace(dsets,dataset_prefix,"")
+
                 goes_l2_obj_dsets.append(dsets)
 
                 if len(goes_l2_obj_dsets[-1]) > goes_l2_obj_dsets_len:
