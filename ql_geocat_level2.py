@@ -432,7 +432,10 @@ def _argparse():
         console_logFormat = '%(asctime)s.%(msecs)03d (%(levelname)s) : %(message)s'
         date_format = '%Y-%m-%d %H:%M:%S'
 
-    logging.basicConfig(level=level, format=console_logFormat, datefmt=date_format)
+    logging.basicConfig(stream = sys.stdout,
+                        level = level,
+                        format = console_logFormat,
+                        datefmt = date_format)
 
     return args,version
 
