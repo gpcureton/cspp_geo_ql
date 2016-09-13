@@ -89,6 +89,8 @@ class GOES_HDF4():
         self.datanames = self.data_dict.keys()
         self.datanames.sort()
 
+        self.dimensions = self.file_obj.select('pixel_latitude').dimensions()
+
 
     class Dataset():
 
@@ -104,7 +106,7 @@ class GOES_HDF4():
 
             selfd.dset = selfd.dset * selfd.attrs['scale_factor'] + selfd.attrs['add_offset']
 
-    def close(self):
+    def close_file(self):
         LOG.debug('Closing {}...'.format(self.input_file))
         self.file_obj.end()
 
@@ -152,7 +154,7 @@ class GOES_NetCDF():
             selfd.dset = ma.masked_equal(selfd.dset_obj[:],selfd.attrs['_FillValue'])
             #selfd.dset = selfd.dset * selfd.attrs['scale_factor'] + selfd.attrs['add_offset']
 
-    def close_netcdf_file(self):
+    def close_file(self):
         LOG.debug('Closing {}...'.format(self.input_file))
         self.file_obj.close()
 
@@ -567,7 +569,7 @@ def list_l2_datasets(options,goes_obj,geocat_data):
 
                 goes_l2_obj_logscale.append(logscale)
 
-        goes_obj.close_netcdf_file()
+        goes_obj.close_file()
 
         str_format = "\t{{:{}s}} | {{:{}s}} | {{}}".format(str(goes_l2_obj_dsets_len),
                 str(len("Colormap Name")))
@@ -600,8 +602,17 @@ def set_plot_styles(goes_obj, data_obj, dataset_options, options, plot_nav_optio
     plot_style_options['font_scale'] = options.font_scale
     plot_style_options['dpi'] = options.dpi
 
-    image_date_time = goes_obj.attrs['Image_Date_Time']
-    dt_image_date = datetime.strptime(image_date_time,'%Y-%m-%dT%H:%M:%SZ')
+    try:
+        image_date_time = goes_obj.attrs['Image_Date_Time']
+        dt_image_date = datetime.strptime(image_date_time,'%Y-%m-%dT%H:%M:%SZ')
+    except:
+        image_date = str(goes_obj.attrs['Image_Date'])
+        image_time = str(goes_obj.attrs['Image_Time']).zfill(6)
+        year = str(int(image_date[:3]) + 1900)
+        jday = image_date[3:]
+        image_date_time = '{}-{}T{}'.format(year,jday,image_time)
+        dt_image_date = datetime.strptime(image_date_time,'%Y-%jT%H%M%S')
+
 
     # Set the plot title
     if options.plot_title==None:

@@ -60,7 +60,7 @@ from netCDF4 import Dataset
 from netCDF4 import num2date
 
 import geocat_l2_data
-from ql_geocat_common import GOES_NetCDF
+from ql_geocat_common import GOES_NetCDF,GOES_HDF4
 from ql_geocat_common import set_plot_navigation_bm as set_plot_navigation
 from ql_geocat_common import set_plot_styles
 from ql_geocat_common import list_l2_datasets as list_datasets
@@ -452,17 +452,16 @@ def main():
     outputFilePrefix  = options.outputFilePrefix
 
     # Create and populate the GOES object
-    #goes_l2_obj = GOES_HDF4(options.input_file)
     goes_l2_obj = GOES_NetCDF(options.input_file)
-
-    lats = goes_l2_obj.Dataset(goes_l2_obj,'pixel_latitude').dset
-    lons = goes_l2_obj.Dataset(goes_l2_obj,'pixel_longitude').dset
-    sat_zenith_angle = goes_l2_obj.Dataset(goes_l2_obj,'pixel_satellite_zenith_angle').dset
 
     # If we want to list the datasets, do that here and exit
     if options.list_datasets:
         list_datasets(options,goes_l2_obj,geocat_l2_data)
         return 0
+
+    lats = goes_l2_obj.Dataset(goes_l2_obj,'pixel_latitude').dset
+    lons = goes_l2_obj.Dataset(goes_l2_obj,'pixel_longitude').dset
+    sat_zenith_angle = goes_l2_obj.Dataset(goes_l2_obj,'pixel_satellite_zenith_angle').dset
 
     # Read in the desired dataset
     try:
@@ -491,7 +490,7 @@ def main():
     else:
         data_mask = np.zeros(data.shape,dtype='bool')
 
-    goes_l2_obj.close_netcdf_file()
+    goes_l2_obj.close_file()
 
     # Determine the filename
     file_suffix = "{}".format(options.dataset)

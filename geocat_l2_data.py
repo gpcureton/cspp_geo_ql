@@ -58,6 +58,23 @@ class Satellite(object):
     common_data['baseline_cmask_seviri_cloud_mask'] = common_data['baseline_cmask_goes_nop_cloud_mask']
 
 
+    common_data['eps_cmask_ahi_cloud_mask'] = {
+            'name':'Cloud Mask',
+            'quantity': 'cloud mask',
+            'discrete':True,
+            'values':(0,1,2,3),
+            'mask_values':[],
+            'units': None,
+            'fill_boundaries':[-0.5,0.5,1.5,2.5,3.5],
+            'fill_colours':['w','#ff0000','#00ffff','#00ff00'],
+            'tick_names':['confident cloudy','probably cloudy','probably clear','confident clear'],
+            'cmap':None,
+            'meridian_color':'black',
+            'coastline_color':'black',
+            'country_color':'black'
+            }
+
+
     common_data['goesnp_ctype_cloud_phase'] = {
             'name':'Cloud Phase',
             'quantity':'cloud phase',
@@ -73,6 +90,7 @@ class Satellite(object):
             'country_color':'magenta',
             'meridian_color':'yellow'
             }
+    common_data['enterprise_cldphase_10_11_13_14_15_cloud_phase'] = common_data['goesnp_ctype_cloud_phase']
 
     common_data['goesnp_ctype_cloud_type'] = {
             'name':'Cloud Type',
@@ -89,6 +107,7 @@ class Satellite(object):
             'country_color':'magenta',
             'meridian_color':'yellow'
             }
+    common_data['enterprise_cldphase_10_11_13_14_15_cloud_type'] = common_data['goesnp_ctype_cloud_type']
 
     common_data['ACHA_mode_7_goes_cloud_emissivity'] = {
                 'name':'ACHA mode 7 GOES Cloud Emissivity',
