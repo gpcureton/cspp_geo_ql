@@ -419,17 +419,24 @@ def main():
     outputFilePrefix  = options.outputFilePrefix
 
     # Create and populate the GOES object
-    #goes_l1_obj = GOES_HDF4(options.input_file)
     goes_l1_obj = GOES_NetCDF(options.input_file)
+
+    # Get a bunch of required data for this satellite
+    if 'goes' in  goes_l1_obj.attrs['Sensor_Name']:
+        sat_obj = geocat_l1_data.Satellite.factory('GOES_NOP')
+    elif 'himawari' in  goes_l1_obj.attrs['Sensor_Name']:
+        sat_obj = geocat_l1_data.Satellite.factory('Himawari')
+    else:
+        LOG.error("Unsupported satellite {}, aborting...".format(goes_l1_obj.attrs['Sensor_Name']))
+
+    # If we want to list the datasets, do that here and exit
+    if options.list_datasets:
+        list_datasets(options,goes_l1_obj,sat_obj)
+        return 0
 
     lats = goes_l1_obj.Dataset(goes_l1_obj,'pixel_latitude').dset
     lons = goes_l1_obj.Dataset(goes_l1_obj,'pixel_longitude').dset
     sat_zenith_angle = goes_l1_obj.Dataset(goes_l1_obj,'pixel_satellite_zenith_angle').dset
-
-    # If we want to list the datasets, do that here and exit
-    if options.list_datasets:
-        list_datasets(options,goes_l1_obj,geocat_l1_data)
-        return 0
 
     # Strip spacecraft specific information from the channel name...
     dataset_prefix = ""
@@ -455,7 +462,7 @@ def main():
     except Exception:
         LOG.debug(traceback.format_exc())
         LOG.error('"{}" is not a valid options.dataset in {}, aborting.'.format(options.dataset,options.input_file))
-        goes_l1_obj.close_netcdf_file()
+        goes_l1_obj.close_file()
         return 1
 
     # Use the solar zenith angle to mask off-disk pixels...
@@ -469,7 +476,7 @@ def main():
     else:
         data_mask = np.zeros(data.shape,dtype='bool')
 
-    goes_l1_obj.close_netcdf_file()
+    goes_l1_obj.close_file()
 
     # Determine the filename
     file_suffix = "{}".format(options.dataset)

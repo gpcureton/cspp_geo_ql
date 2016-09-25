@@ -22,10 +22,13 @@ Copyright (c) 2012-2013 University of Wisconsin Regents. All rights reserved.
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import logging
 from copy import copy
 from matplotlib import cm as cm
 import geocat_colormaps as g1_cmaps
 
+# every module should have a LOG object
+LOG = logging.getLogger(__file__)
 
 class Satellite(object):
 
@@ -199,67 +202,68 @@ class Satellite(object):
 
 class GOES_NOP(Satellite):
 
-    geocat_reflectance_channels = [2, 7]
-    geocat_emissivity_channels = [7]
-    geocat_btemperature_channels = [7, 9, 14, 16]
+    def __init__(self, *args, **kwargs):
+        Satellite.__init__(self, *args, **kwargs)
 
-    data = {}
-    #data = {'channel_{}_reflectance'.format(chan):copy(Satellite.refl_dict) for chan in geocat_reflectance_channels}
-    #_ = [data['channel_{}_reflectance'.format(chan)].update(name='Channel {} reflectance'.format(chan)) 
-            #for chan in geocat_reflectance_channels]
+        geocat_reflectance_channels = [2, 7]
+        geocat_emissivity_channels = [7]
+        geocat_btemperature_channels = [7, 9, 14, 16]
 
-    for chan in geocat_reflectance_channels:
-        data['channel_{}_reflectance'.format(chan)] = copy(Satellite.refl_dict)
-        data['channel_{}_reflectance'.format(chan)]['name'] = 'Channel {} reflectance'.format(chan)
-    for chan in geocat_emissivity_channels:
-        data['channel_{}_emissivity'.format(chan)] = copy(Satellite.emis_dict)
-        data['channel_{}_emissivity'.format(chan)]['name'] = 'Channel {} emissivity'.format(chan)
-    for chan in geocat_btemperature_channels:
-        data['channel_{}_brightness_temperature'.format(chan)] = copy(Satellite.bt_dict)
-        data['channel_{}_brightness_temperature'.format(chan)]['name'] = 'Channel {} brightness temperature'.format(chan)
+        data = {}
 
-    data.update(Satellite.common_data)
+        for chan in geocat_reflectance_channels:
+            data['channel_{}_reflectance'.format(chan)] = copy(Satellite.refl_dict)
+            data['channel_{}_reflectance'.format(chan)]['name'] = 'Channel {} reflectance'.format(chan)
+        for chan in geocat_emissivity_channels:
+            data['channel_{}_emissivity'.format(chan)] = copy(Satellite.emis_dict)
+            data['channel_{}_emissivity'.format(chan)]['name'] = 'Channel {} emissivity'.format(chan)
+        for chan in geocat_btemperature_channels:
+            data['channel_{}_brightness_temperature'.format(chan)] = copy(Satellite.bt_dict)
+            data['channel_{}_brightness_temperature'.format(chan)]['name'] = 'Channel {} brightness temperature'.format(chan)
 
-    data['imager_channel_1_reflectance'] = data['channel_2_reflectance']
-    data['imager_channel_2_brightness_temperature'] = data['channel_7_brightness_temperature']
-    data['imager_channel_2_emissivity'] = data['channel_7_emissivity']
-    data['imager_channel_2_reflectance'] = data['channel_7_reflectance']
-    data['imager_channel_3_brightness_temperature'] = data['channel_9_brightness_temperature']
-    data['imager_channel_4_brightness_temperature'] = data['channel_14_brightness_temperature']
-    data['imager_channel_6_brightness_temperature'] = data['channel_16_brightness_temperature']
+        data.update(Satellite.common_data)
 
-    for dsets in ['imager_channel_1_reflectance','imager_channel_2_brightness_temperature',
-            'imager_channel_2_emissivity','imager_channel_2_reflectance',
-            'imager_channel_3_brightness_temperature','imager_channel_4_brightness_temperature',
-            'imager_channel_6_brightness_temperature']:
-        data[dsets]['name'] = " ".join(dsets.split('_')[1:])
+        data['imager_channel_1_reflectance'] = data['channel_2_reflectance']
+        data['imager_channel_2_brightness_temperature'] = data['channel_7_brightness_temperature']
+        data['imager_channel_2_emissivity'] = data['channel_7_emissivity']
+        data['imager_channel_2_reflectance'] = data['channel_7_reflectance']
+        data['imager_channel_3_brightness_temperature'] = data['channel_9_brightness_temperature']
+        data['imager_channel_4_brightness_temperature'] = data['channel_14_brightness_temperature']
+        data['imager_channel_6_brightness_temperature'] = data['channel_16_brightness_temperature']
+
+        for dsets in ['imager_channel_1_reflectance','imager_channel_2_brightness_temperature',
+                'imager_channel_2_emissivity','imager_channel_2_reflectance',
+                'imager_channel_3_brightness_temperature','imager_channel_4_brightness_temperature',
+                'imager_channel_6_brightness_temperature']:
+            data[dsets]['name'] = " ".join(dsets.split('_')[1:])
+
+        self.data = data
 
 
 class Himawari(Satellite):
 
-    geocat_reflectance_channels = [1, 2, 3, 5, 6, 7]
-    geocat_emissivity_channels = [7]
-    geocat_btemperature_channels = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+    def __init__(self, *args, **kwargs):
+        Satellite.__init__(self, *args, **kwargs)
 
+        geocat_reflectance_channels = [1, 2, 3, 4, 5, 6, 7]
+        geocat_emissivity_channels = [7]
+        geocat_btemperature_channels = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
 
-    data = {}
-    #data = {'channel_{}_reflectance'.format(chan):copy(Satellite.refl_dict) for chan in geocat_reflectance_channels}
-    #_ = [data['channel_{}_reflectance'.format(chan)].update(name='Channel {} reflectance'.format(chan)) 
-            #for chan in geocat_reflectance_channels]
+        data = {}
 
-    for chan in geocat_reflectance_channels:
-        data['channel_{}_reflectance'.format(chan)] = copy(Satellite.refl_dict)
-        data['channel_{}_reflectance'.format(chan)]['name'] = 'Channel {} reflectance'.format(chan)
-    for chan in geocat_emissivity_channels:
-        data['channel_{}_emissivity'.format(chan)] = copy(Satellite.emis_dict)
-        data['channel_{}_emissivity'.format(chan)]['name'] = 'Channel {} emissivity'.format(chan)
-    for chan in geocat_btemperature_channels:
-        data['channel_{}_brightness_temperature'.format(chan)] = copy(Satellite.bt_dict)
-        data['channel_{}_brightness_temperature'.format(chan)]['name'] = 'Channel {} brightness temperature'.format(chan)
+        for chan in geocat_reflectance_channels:
+            data['ahi_channel_{}_reflectance'.format(chan)] = copy(Satellite.refl_dict)
+            data['ahi_channel_{}_reflectance'.format(chan)]['name'] = 'Channel {} reflectance'.format(chan)
+        for chan in geocat_emissivity_channels:
+            data['ahi_channel_{}_emissivity'.format(chan)] = copy(Satellite.emis_dict)
+            data['ahi_channel_{}_emissivity'.format(chan)]['name'] = 'Channel {} emissivity'.format(chan)
+        for chan in geocat_btemperature_channels:
+            data['ahi_channel_{}_brightness_temperature'.format(chan)] = copy(Satellite.bt_dict)
+            data['ahi_channel_{}_brightness_temperature'.format(chan)]['name'] = 'Channel {} brightness temperature'.format(chan)
 
-    data.update(Satellite.common_data)
+        data.update(Satellite.common_data)
 
-
+        self.data = data
 
 
 class Navigation(Satellite):

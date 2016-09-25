@@ -60,7 +60,7 @@ from netCDF4 import Dataset
 from netCDF4 import num2date
 
 import geocat_l2_data
-from ql_geocat_common import GOES_NetCDF,GOES_HDF4
+from ql_geocat_common import GOES_NetCDF
 from ql_geocat_common import set_plot_navigation_bm as set_plot_navigation
 from ql_geocat_common import set_plot_styles
 from ql_geocat_common import list_l2_datasets as list_datasets
@@ -476,7 +476,7 @@ def main():
     except Exception:
         LOG.debug(traceback.format_exc())
         LOG.error('"{}" is not a valid options.dataset in {}, aborting.'.format(options.dataset,options.input_file))
-        goes_l2_obj.close_netcdf_file()
+        goes_l2_obj.close_file()
         return 1
 
     # Use the solar zenith angle to mask off-disk pixels...

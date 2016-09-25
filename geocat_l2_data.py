@@ -25,6 +25,7 @@ Copyright (c) 2012-2013 University of Wisconsin Regents. All rights reserved.
 from copy import copy
 from matplotlib import cm as cm
 import geocat_colormaps as g2_cmaps
+import colormaps as new_cm
 
 
 class Satellite(object):
@@ -74,6 +75,24 @@ class Satellite(object):
             'country_color':'black'
             }
 
+    common_data['eps_cmask_ahi_cld_probability'] = {
+                'name':'Cloud Probability',
+                'quantity':'cloud probability',
+                'discrete':False,
+                'values':[0.,1.],
+                'mask_ranges':[],
+                'logscale':False,
+                'units': None,
+                'coastline_color':'cyan',
+                'country_color':'magenta',
+                'meridian_color':'yellow',
+                #'cmap':cm.gray,
+                'cmap':g2_cmaps.magma,
+                #'cmap':g2_cmaps.inferno,
+                #'cmap':g2_cmaps.plasma,
+                #'cmap':g2_cmaps.viridis,
+                'n_levels':256
+                }
 
     common_data['goesnp_ctype_cloud_phase'] = {
             'name':'Cloud Phase',
@@ -110,7 +129,7 @@ class Satellite(object):
     common_data['enterprise_cldphase_10_11_13_14_15_cloud_type'] = common_data['goesnp_ctype_cloud_type']
 
     common_data['ACHA_mode_7_goes_cloud_emissivity'] = {
-                'name':'ACHA mode 7 GOES Cloud Emissivity',
+                'name':'Cloud Emissivity',
                 'quantity':'emissivity',
                 'discrete':False,
                 'values':[0.,1.],
@@ -120,12 +139,13 @@ class Satellite(object):
                 'coastline_color':'cyan',
                 'country_color':'magenta',
                 'meridian_color':'yellow',
-                'cmap':cm.cubehelix,
+                'cmap':g2_cmaps.viridis,
                 'n_levels':256
                 }
+    common_data['eps_cmask_ahi_emiss11_high'] = common_data['ACHA_mode_7_goes_cloud_emissivity']
 
     common_data['ACHA_mode_7_goes_cloud_optical_depth_vis'] = {
-                'name':'ACHA mode 7 GOES Cloud Optical Depth (visible)',
+                'name':'Cloud Optical Depth (visible)',
                 'quantity':'optical depth',
                 'discrete':False,
                 'values':[0.,12.],
@@ -135,12 +155,12 @@ class Satellite(object):
                 'coastline_color':'cyan',
                 'country_color':'magenta',
                 'meridian_color':'yellow',
-                'cmap':cm.cubehelix,
+                'cmap':g2_cmaps.viridis,
                 'n_levels':256
                 }
 
     common_data['ACHA_mode_7_goes_cloud_particle_effective_radius'] = {
-                'name':'ACHA mode 7 GOES Cloud Particle Effective Radius',
+                'name':'Cloud Particle Effective Radius',
                 'quantity':'effective radius',
                 'discrete':False,
                 'values':[0.,40.],
@@ -150,42 +170,44 @@ class Satellite(object):
                 'coastline_color':'cyan',
                 'country_color':'magenta',
                 'meridian_color':'yellow',
-                'cmap':cm.cubehelix,
+                'cmap':g2_cmaps.viridis,
                 'n_levels':256
                 }
 
     common_data['ACHA_mode_7_goes_cloud_top_height'] = {
-                'name':'ACHA mode 7 GOES Cloud Top Height',
+                'name':'Cloud Top Height',
                 'quantity':'height',
                 'discrete':False,
-                'values':[100.,10000.],
+                'values':[0.,18000.],
                 'mask_ranges':[],
-                'logscale':True,
+                'logscale':False,
                 'units': '$\mathrm{m}$',
                 'coastline_color':'cyan',
                 'country_color':'magenta',
                 'meridian_color':'yellow',
-                'cmap':cm.cubehelix,
+                'cmap':g2_cmaps.viridis,
                 'n_levels':256
                 }
+    common_data['ACHA_mode_8_cloud_top_height'] = common_data['ACHA_mode_7_goes_cloud_top_height']
 
     common_data['ACHA_mode_7_goes_cloud_top_pressure'] = {
-                'name':'ACHA mode 7 GOES Cloud Top Pressure',
+                'name':'Cloud Top Pressure',
                 'quantity':'pressure',
                 'discrete':False,
-                'values':[0.,1100.],
+                'values':[100.,1100.],
                 'mask_ranges':[],
-                'logscale':False,
+                'logscale':True,
                 'units': '$\mathrm{hPa}$',
                 'coastline_color':'cyan',
                 'country_color':'magenta',
                 'meridian_color':'yellow',
-                'cmap':cm.cubehelix_r,
+                'cmap':g2_cmaps.viridis_r,
                 'n_levels':256
                 }
+    common_data['ACHA_mode_8_cloud_top_pressure'] = common_data['ACHA_mode_7_goes_cloud_top_pressure']
 
     common_data['ACHA_mode_7_goes_cloud_top_temperature'] = {
-                'name':'ACHA mode 7 GOES Cloud Top Temperature',
+                'name':'Cloud Top Temperature',
                 'quantity':'temperature',
                 'discrete':False,
                 'values':[180.,295.],
@@ -195,12 +217,13 @@ class Satellite(object):
                 'coastline_color':'cyan',
                 'country_color':'magenta',
                 'meridian_color':'yellow',
-                'cmap':cm.cubehelix_r,
+                'cmap':g2_cmaps.viridis_r,
                 'n_levels':256
                 }
+    common_data['ACHA_mode_8_cloud_top_temperature'] = common_data['ACHA_mode_7_goes_cloud_top_temperature']
 
     common_data['DCOMP_mode_3_cloud_albedo'] = {
-                'name':'DCOMP mode 3 Cloud Albedo',
+                'name':'Cloud Albedo',
                 'quantity':'albedo',
                 'discrete':False,
                 'values':[0.,1.],
@@ -210,12 +233,12 @@ class Satellite(object):
                 'coastline_color':'cyan',
                 'country_color':'magenta',
                 'meridian_color':'yellow',
-                'cmap':cm.cubehelix,
+                'cmap':g2_cmaps.viridis,
                 'n_levels':256
                 }
 
     common_data['DCOMP_mode_3_cloud_spherical_albedo'] = {
-                'name':'DCOMP mode 3 Cloud Spherical Albedo',
+                'name':'Cloud Spherical Albedo',
                 'quantity':'albedo',
                 'discrete':False,
                 'values':[0.,1.],
@@ -225,12 +248,12 @@ class Satellite(object):
                 'coastline_color':'cyan',
                 'country_color':'magenta',
                 'meridian_color':'yellow',
-                'cmap':cm.cubehelix,
+                'cmap':g2_cmaps.viridis,
                 'n_levels':256
                 }
 
     common_data['DCOMP_mode_3_cloud_ice_water_path'] = {
-                'name':'DCOMP mode 3 Cloud Ice Water Path',
+                'name':'Cloud Ice Water Path',
                 'quantity':'ice water path',
                 'discrete':False,
                 'values':[0., 1000.],
@@ -240,12 +263,12 @@ class Satellite(object):
                 'coastline_color':'cyan',
                 'country_color':'magenta',
                 'meridian_color':'yellow',
-                'cmap':cm.cubehelix,
+                'cmap':g2_cmaps.viridis,
                 'n_levels':256
                 }
 
     common_data['DCOMP_mode_3_cloud_liquid_water_path'] = {
-                'name':'DCOMP mode 3 Cloud Liquid Water Path',
+                'name':'Cloud Liquid Water Path',
                 'quantity':'liquid water path',
                 'discrete':False,
                 'values':[0., 1000.],
@@ -255,12 +278,12 @@ class Satellite(object):
                 'coastline_color':'cyan',
                 'country_color':'magenta',
                 'meridian_color':'yellow',
-                'cmap':cm.cubehelix,
+                'cmap':g2_cmaps.viridis,
                 'n_levels':256
                 }
 
     common_data['DCOMP_mode_3_cloud_optical_depth_vis'] = {
-                'name':'DCOMP mode 3 Cloud Optical Depth (visible)',
+                'name':'Cloud Optical Depth (visible)',
                 'quantity':'optical depth',
                 'discrete':False,
                 'values':[0.,30.],
@@ -270,12 +293,12 @@ class Satellite(object):
                 'coastline_color':'cyan',
                 'country_color':'magenta',
                 'meridian_color':'yellow',
-                'cmap':cm.cubehelix,
+                'cmap':g2_cmaps.viridis,
                 'n_levels':256
                 }
 
     common_data['DCOMP_mode_3_cloud_particle_effective_radius'] = {
-                'name':'DCOMP mode 3 Cloud Particle Effective Radius',
+                'name':'Cloud Particle Effective Radius',
                 'quantity':'effective radius',
                 'discrete':False,
                 'values':[0.,40.],
@@ -285,12 +308,12 @@ class Satellite(object):
                 'coastline_color':'cyan',
                 'country_color':'magenta',
                 'meridian_color':'yellow',
-                'cmap':cm.cubehelix,
+                'cmap':g2_cmaps.viridis,
                 'n_levels':256
                 }
 
     common_data['goesr_fog_IFR_fog_probability'] = {
-                'name':'goesr fog IFR Fog Probability',
+                'name':'IFR Fog Probability',
                 'quantity':'probability',
                 'discrete':False,
                 'values':[0.,100.],
@@ -303,9 +326,10 @@ class Satellite(object):
                 'cmap':g2_cmaps.geocat_colormaps.get_cmap_fog(cmap_break=0.37),
                 'n_levels':256
                 }
+    common_data['goesr_fog_bridge_IFR_fog_probability'] = common_data['goesr_fog_IFR_fog_probability']
 
     common_data['goesr_fog_LIFR_fog_probability'] = {
-                'name':'goesr fog LIFR Fog Probability',
+                'name':'LIFR Fog Probability',
                 'quantity':'probability',
                 'discrete':False,
                 'values':[0.,100.],
@@ -318,12 +342,29 @@ class Satellite(object):
                 'cmap':g2_cmaps.geocat_colormaps.get_cmap_fog(cmap_break=0.30),
                 'n_levels':256
                 }
+    common_data['goesr_fog_bridge_LIFR_fog_probability'] = common_data['goesr_fog_LIFR_fog_probability']
 
     common_data['goesr_fog_MVFR_fog_probability'] = {
-                'name':'goesr fog MVFR Fog Probability',
+                'name':'MVFR Fog Probability',
                 'quantity':'probability',
                 'discrete':False,
                 'values':[0.,100.],
+                'mask_ranges':[],
+                'logscale':False,
+                'units': '%',
+                'coastline_color':'cyan',
+                'country_color':'magenta',
+                'meridian_color':'yellow',
+                'cmap':g2_cmaps.geocat_colormaps.get_cmap_fog(cmap_break=0.55),
+                'n_levels':256
+                }
+    common_data['goesr_fog_bridge_MVFR_fog_probability'] = common_data['goesr_fog_MVFR_fog_probability']
+
+    common_data['goesr_fog_bridge_fog_depth'] = {
+                'name':'Fog Depth',
+                'quantity':'depth',
+                'discrete':False,
+                'values':[],
                 'mask_ranges':[],
                 'logscale':False,
                 'units': '%',
@@ -345,7 +386,7 @@ class Satellite(object):
                 'coastline_color':'cyan',
                 'country_color':'magenta',
                 'meridian_color':'yellow',
-                'cmap':cm.cubehelix,
+                'cmap':g2_cmaps.viridis,
                 'n_levels':256
                 }
 

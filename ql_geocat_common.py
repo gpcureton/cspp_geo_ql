@@ -417,25 +417,18 @@ def set_plot_navigation_bm(lats,lons,goes_l1_obj, options):
     return plot_nav_options
 
 
-def list_l1_datasets(options,goes_obj,geocat_data):
+def list_l1_datasets(options,goes_obj,sat_obj):
     # Get some spacecraft and dataset name info...
     dataset_prefix = ""
     try:
         chan_convention = goes_obj.attrs['Channel_Number_Convention']
         if 'instrument-native' in chan_convention:
-            spacecraft = goes_obj.attrs['Spacecraft_Name']
-            dataset_prefix = "{}_".format(string.replace(spacecraft.lower(),'-','_'))
+            spacecraft = goes_obj.attrs['Spacecraft_Name'].lower()
+            dataset_prefix = "{}_".format(string.replace(spacecraft,'-','_'))
     except KeyError:
         LOG.warn('No Channel_Number_Convention attribute in in \n\t{}, is this a level-2 file? Aborting.\n'
                 .format(options.input_file))
-        #return
-
-    if 'goes' in  goes_obj.attrs['Sensor_Name']:
-        sat_obj = geocat_data.Satellite.factory('GOES_NOP')
-    elif 'himawari' in  goes_obj.attrs['Sensor_Name']:
-        sat_obj = geocat_data.Satellite.factory('Himawari')
-    else:
-        LOG.error("Unsupported satellite {}, aborting...".format(goes_l1_obj.attrs['Sensor_Name']))
+        return
 
     lines =  len(goes_obj.file_obj.dimensions['lines'])
     elements =  len(goes_obj.file_obj.dimensions['elements'])
@@ -448,7 +441,6 @@ def list_l1_datasets(options,goes_obj,geocat_data):
         goes_l1_obj_dsets_len = 0
         goes_l1_obj_cmaps = []
         goes_l1_obj_logscale = []
-
 
         for dsets in goes_obj.datanames:
             data_obj = goes_obj.Dataset(goes_obj,dsets)
@@ -468,6 +460,7 @@ def list_l1_datasets(options,goes_obj,geocat_data):
                     goes_l1_obj_dsets_len = len(goes_l1_obj_dsets[-1])
 
                 try:
+                    LOG.debug('Checking for dataset "{}"...'.format(dataset))
                     dataset_options = sat_obj.data[dataset]
                 except KeyError:
                     LOG.warn('Unknown generic dataset "{}", defaulting to "unknown"'.format(dsets))
@@ -489,7 +482,7 @@ def list_l1_datasets(options,goes_obj,geocat_data):
 
                 goes_l1_obj_logscale.append(logscale)
 
-        goes_obj.close_netcdf_file()
+        goes_obj.close_file()
 
         str_format = "\t{{:{}s}} | {{:{}s}} | {{}}".format(str(goes_l1_obj_dsets_len),
                 str(len("Colormap Name")))
