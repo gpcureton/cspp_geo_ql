@@ -22,11 +22,14 @@ Copyright (c) 2012-2013 University of Wisconsin Regents. All rights reserved.
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import logging
 from copy import copy
 from matplotlib import cm as cm
 import geocat_colormaps as g2_cmaps
 import colormaps as new_cm
 
+# every module should have a LOG object
+LOG = logging.getLogger(__file__)
 
 class Satellite(object):
 
@@ -425,14 +428,23 @@ class Satellite(object):
 
 class GOES_NOP(Satellite):
 
-    data = {}
-    data.update(Satellite.common_data)
+    def __init__(self, *args, **kwargs):
+        Satellite.__init__(self, *args, **kwargs)
+
+        data = {}
+        data.update(Satellite.common_data)
+
+        self.data = data
 
 class Himawari(Satellite):
 
-    data = {}
-    data.update(Satellite.common_data)
+    def __init__(self, *args, **kwargs):
+        Satellite.__init__(self, *args, **kwargs)
 
+        data = {}
+        data.update(Satellite.common_data)
+
+        self.data = data
 
 
 
