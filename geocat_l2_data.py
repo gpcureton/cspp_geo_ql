@@ -26,7 +26,6 @@ import logging
 from copy import copy
 from matplotlib import cm as cm
 import geocat_colormaps as g2_cmaps
-import colormaps as new_cm
 
 # every module should have a LOG object
 LOG = logging.getLogger(__file__)
@@ -290,6 +289,9 @@ class Satellite(object):
             'cmap':g2_cmaps.viridis,
             'n_levels':256
             }
+    common_data['night_optprop_cloud_ice_water_path'] = common_data['DCOMP_mode_3_cloud_ice_water_path']
+    common_data['night_optprop_cloud_ice_water_path']['dset_name'] = 'night_optprop_cloud_ice_water_path'
+    common_data['night_optprop_cloud_ice_water_path']['name'] = 'Cloud Ice Water Path'
 
     common_data['DCOMP_mode_3_cloud_liquid_water_path'] = {
             'dset_name':'DCOMP_mode_3_cloud_liquid_water_path',
@@ -306,6 +308,9 @@ class Satellite(object):
             'cmap':g2_cmaps.viridis,
             'n_levels':256
             }
+    common_data['night_optprop_cloud_liquid_water_path'] = common_data['DCOMP_mode_3_cloud_liquid_water_path']
+    common_data['night_optprop_cloud_liquid_water_path']['dset_name'] = 'night_optprop_cloud_liquid_water_path'
+    common_data['night_optprop_cloud_liquid_water_path']['name'] = 'Cloud Liquid Water Path'
 
     common_data['DCOMP_mode_3_cloud_optical_depth_vis'] = {
             'dset_name':'DCOMP_mode_3_cloud_optical_depth_vis',
@@ -322,6 +327,9 @@ class Satellite(object):
             'cmap':g2_cmaps.viridis,
             'n_levels':256
             }
+    common_data['night_optprop_cloud_optical_depth_vis'] = common_data['DCOMP_mode_3_cloud_optical_depth_vis']
+    common_data['night_optprop_cloud_optical_depth_vis']['dset_name'] = 'night_optprop_cloud_optical_depth_vis'
+    common_data['night_optprop_cloud_optical_depth_vis']['name'] = 'Cloud Optical Depth (visible)'
 
     common_data['DCOMP_mode_3_cloud_particle_effective_radius'] = {
             'dset_name':'DCOMP_mode_3_cloud_particle_effective_radius',
@@ -338,6 +346,9 @@ class Satellite(object):
             'cmap':g2_cmaps.viridis,
             'n_levels':256
             }
+    common_data['night_optprop_cloud_particle_effective_radius'] = common_data['DCOMP_mode_3_cloud_particle_effective_radius']
+    common_data['night_optprop_cloud_particle_effective_radius']['dset_name'] = 'night_optprop_cloud_particle_effective_radius'
+    common_data['night_optprop_cloud_particle_effective_radius']['name'] = 'Cloud Particle Effective Radius'
 
     common_data['goesr_fog_IFR_fog_probability'] = {
             'dset_name':'goesr_fog_IFR_fog_probability',
