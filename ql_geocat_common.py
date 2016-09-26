@@ -714,8 +714,7 @@ def plot_image_continuous(data,data_mask,png_file,
 
     # If our data is all missing, return
     if (np.sum(data_mask) == data.size):
-        LOG.warn("Entire {} dataset is missing, aborting".\
-                format(cbar_title))
+        LOG.warn('Entire "{}" dataset is missing, aborting'.format(dataset_options['dset_name']))
         return -1
 
     # Construct particular data mask
