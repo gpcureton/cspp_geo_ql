@@ -59,7 +59,7 @@ class Satellite(object):
             'coastline_color':'black',
             'country_color':'black'
             }
-    common_data['baseline_cmask_seviri_cloud_mask'] = common_data['baseline_cmask_goes_nop_cloud_mask']
+    common_data['baseline_cmask_seviri_cloud_mask'] = copy(common_data['baseline_cmask_goes_nop_cloud_mask'])
     common_data['baseline_cmask_seviri_cloud_mask']['dset_name'] = 'baseline_cmask_seviri_cloud_mask'
 
 
@@ -116,7 +116,7 @@ class Satellite(object):
             'country_color':'magenta',
             'meridian_color':'yellow'
             }
-    common_data['enterprise_cldphase_10_11_13_14_15_cloud_phase'] = common_data['goesnp_ctype_cloud_phase']
+    common_data['enterprise_cldphase_10_11_13_14_15_cloud_phase'] = copy(common_data['goesnp_ctype_cloud_phase'])
     common_data['enterprise_cldphase_10_11_13_14_15_cloud_phase']['dset_name'] = 'enterprise_cldphase_10_11_13_14_15_cloud_phase'
 
     common_data['goesnp_ctype_cloud_type'] = {
@@ -135,7 +135,7 @@ class Satellite(object):
             'country_color':'magenta',
             'meridian_color':'yellow'
             }
-    common_data['enterprise_cldphase_10_11_13_14_15_cloud_type'] = common_data['goesnp_ctype_cloud_type']
+    common_data['enterprise_cldphase_10_11_13_14_15_cloud_type'] = copy(common_data['goesnp_ctype_cloud_type'])
     common_data['enterprise_cldphase_10_11_13_14_15_cloud_type']['dset_name'] = 'enterprise_cldphase_10_11_13_14_15_cloud_type'
 
     common_data['ACHA_mode_7_goes_cloud_emissivity'] = {
@@ -153,7 +153,7 @@ class Satellite(object):
             'cmap':g2_cmaps.viridis,
             'n_levels':256
             }
-    common_data['eps_cmask_ahi_emiss11_high'] = common_data['ACHA_mode_7_goes_cloud_emissivity']
+    common_data['eps_cmask_ahi_emiss11_high'] = copy(common_data['ACHA_mode_7_goes_cloud_emissivity'])
     common_data['eps_cmask_ahi_emiss11_high']['dset_name'] = 'eps_cmask_ahi_emiss11_high'
 
     common_data['ACHA_mode_7_goes_cloud_optical_depth_vis'] = {
@@ -203,7 +203,7 @@ class Satellite(object):
             'cmap':g2_cmaps.viridis,
             'n_levels':256
             }
-    common_data['ACHA_mode_8_cloud_top_height'] = common_data['ACHA_mode_7_goes_cloud_top_height']
+    common_data['ACHA_mode_8_cloud_top_height'] = copy(common_data['ACHA_mode_7_goes_cloud_top_height'])
     common_data['ACHA_mode_8_cloud_top_height']['dset_name'] = 'ACHA_mode_8_cloud_top_height'
 
     common_data['ACHA_mode_7_goes_cloud_top_pressure'] = {
@@ -221,7 +221,7 @@ class Satellite(object):
             'cmap':g2_cmaps.viridis_r,
             'n_levels':256
             }
-    common_data['ACHA_mode_8_cloud_top_pressure'] = common_data['ACHA_mode_7_goes_cloud_top_pressure']
+    common_data['ACHA_mode_8_cloud_top_pressure'] = copy(common_data['ACHA_mode_7_goes_cloud_top_pressure'])
     common_data['ACHA_mode_8_cloud_top_pressure']['dset_name'] = 'ACHA_mode_8_cloud_top_pressure'
 
     common_data['ACHA_mode_7_goes_cloud_top_temperature'] = {
@@ -239,7 +239,7 @@ class Satellite(object):
             'cmap':g2_cmaps.viridis_r,
             'n_levels':256
             }
-    common_data['ACHA_mode_8_cloud_top_temperature'] = common_data['ACHA_mode_7_goes_cloud_top_temperature']
+    common_data['ACHA_mode_8_cloud_top_temperature'] = copy(common_data['ACHA_mode_7_goes_cloud_top_temperature'])
     common_data['ACHA_mode_8_cloud_top_temperature']['dset_name'] = 'ACHA_mode_8_cloud_top_temperature'
 
     common_data['DCOMP_mode_3_cloud_albedo'] = {
@@ -289,7 +289,7 @@ class Satellite(object):
             'cmap':g2_cmaps.viridis,
             'n_levels':256
             }
-    common_data['night_optprop_cloud_ice_water_path'] = common_data['DCOMP_mode_3_cloud_ice_water_path']
+    common_data['night_optprop_cloud_ice_water_path'] = copy(common_data['DCOMP_mode_3_cloud_ice_water_path'])
     common_data['night_optprop_cloud_ice_water_path']['dset_name'] = 'night_optprop_cloud_ice_water_path'
     common_data['night_optprop_cloud_ice_water_path']['name'] = 'Cloud Ice Water Path'
 
@@ -308,7 +308,7 @@ class Satellite(object):
             'cmap':g2_cmaps.viridis,
             'n_levels':256
             }
-    common_data['night_optprop_cloud_liquid_water_path'] = common_data['DCOMP_mode_3_cloud_liquid_water_path']
+    common_data['night_optprop_cloud_liquid_water_path'] = copy(common_data['DCOMP_mode_3_cloud_liquid_water_path'])
     common_data['night_optprop_cloud_liquid_water_path']['dset_name'] = 'night_optprop_cloud_liquid_water_path'
     common_data['night_optprop_cloud_liquid_water_path']['name'] = 'Cloud Liquid Water Path'
 
@@ -327,7 +327,7 @@ class Satellite(object):
             'cmap':g2_cmaps.viridis,
             'n_levels':256
             }
-    common_data['night_optprop_cloud_optical_depth_vis'] = common_data['DCOMP_mode_3_cloud_optical_depth_vis']
+    common_data['night_optprop_cloud_optical_depth_vis'] = copy(common_data['DCOMP_mode_3_cloud_optical_depth_vis'])
     common_data['night_optprop_cloud_optical_depth_vis']['dset_name'] = 'night_optprop_cloud_optical_depth_vis'
     common_data['night_optprop_cloud_optical_depth_vis']['name'] = 'Cloud Optical Depth (visible)'
 
@@ -346,7 +346,7 @@ class Satellite(object):
             'cmap':g2_cmaps.viridis,
             'n_levels':256
             }
-    common_data['night_optprop_cloud_particle_effective_radius'] = common_data['DCOMP_mode_3_cloud_particle_effective_radius']
+    common_data['night_optprop_cloud_particle_effective_radius'] = copy(common_data['DCOMP_mode_3_cloud_particle_effective_radius'])
     common_data['night_optprop_cloud_particle_effective_radius']['dset_name'] = 'night_optprop_cloud_particle_effective_radius'
     common_data['night_optprop_cloud_particle_effective_radius']['name'] = 'Cloud Particle Effective Radius'
 
@@ -365,7 +365,7 @@ class Satellite(object):
             'cmap':g2_cmaps.geocat_colormaps.get_cmap_fog(cmap_break=0.37),
             'n_levels':256
             }
-    common_data['goesr_fog_bridge_IFR_fog_probability'] = common_data['goesr_fog_IFR_fog_probability']
+    common_data['goesr_fog_bridge_IFR_fog_probability'] = copy(common_data['goesr_fog_IFR_fog_probability'])
     common_data['goesr_fog_bridge_IFR_fog_probability']['dset_name'] = 'goesr_fog_bridge_IFR_fog_probability'
 
     common_data['goesr_fog_LIFR_fog_probability'] = {
@@ -383,7 +383,7 @@ class Satellite(object):
             'cmap':g2_cmaps.geocat_colormaps.get_cmap_fog(cmap_break=0.30),
             'n_levels':256
             }
-    common_data['goesr_fog_bridge_LIFR_fog_probability'] = common_data['goesr_fog_LIFR_fog_probability']
+    common_data['goesr_fog_bridge_LIFR_fog_probability'] = copy(common_data['goesr_fog_LIFR_fog_probability'])
     common_data['goesr_fog_bridge_LIFR_fog_probability']['dset_name'] = 'goesr_fog_bridge_LIFR_fog_probability'
 
     common_data['goesr_fog_MVFR_fog_probability'] = {
@@ -401,7 +401,7 @@ class Satellite(object):
             'cmap':g2_cmaps.geocat_colormaps.get_cmap_fog(cmap_break=0.55),
             'n_levels':256
             }
-    common_data['goesr_fog_bridge_MVFR_fog_probability'] = common_data['goesr_fog_MVFR_fog_probability']
+    common_data['goesr_fog_bridge_MVFR_fog_probability'] = copy(common_data['goesr_fog_MVFR_fog_probability'])
     common_data['goesr_fog_bridge_MVFR_fog_probability']['dset_name'] = 'goesr_fog_bridge_MVFR_fog_probability'
 
     common_data['goesr_fog_bridge_fog_depth'] = {
