@@ -69,14 +69,14 @@ def _tuple2args(parms):
     return s.encode('ascii')
 
 
-class GOES_HDF4():
+class Satellite_HDF4():
 
     def __init__(self,input_file):
 
 
         self.input_file = input_file
 
-        LOG.debug('Opening {} with GOES_HDF4...'.format(self.input_file))
+        LOG.debug('Opening {} with Satellite_HDF4...'.format(self.input_file))
         self.file_obj = SD(self.input_file)
 
         # Dictionary of file object attributes
@@ -111,7 +111,7 @@ class GOES_HDF4():
         self.file_obj.end()
 
 
-class GOES_NetCDF():
+class Satellite_NetCDF():
 
     def __init__(self,input_file):
 
@@ -119,7 +119,7 @@ class GOES_NetCDF():
         self.input_file = input_file
 
         if os.path.exists(self.input_file):
-            LOG.debug('Opening {} with GOES_NetCDF...'.format(self.input_file))
+            LOG.debug('Opening {} with Satellite_NetCDF...'.format(self.input_file))
             self.file_obj = Dataset(self.input_file)
         else:
             LOG.error('Input file {} does not exist, aborting...'.format(self.input_file))
@@ -160,7 +160,7 @@ class GOES_NetCDF():
 
 
 
-def set_plot_navigation_proj(lats,lons,goes_l1_obj, options):
+def set_plot_navigation_proj(lats,lons,sat_obj, options):
     """
     Collects the various navigation options and does any required tweaking
     before passing to the plotting method.
@@ -182,7 +182,7 @@ def set_plot_navigation_proj(lats,lons,goes_l1_obj, options):
         LOG.debug("({}) (lon,lat):({},{})".format(crnr,lons[crnr_idx],lats[crnr_idx]))
 
 
-    subsatellite_longitude = goes_l1_obj.attrs['Subsatellite_Longitude']
+    subsatellite_longitude = sat_obj.attrs['Subsatellite_Longitude']
     LOG.debug(' File subsatellite_Longitude = {}'.format(subsatellite_longitude))
 
     plot_nav_options = {}
@@ -241,7 +241,7 @@ def set_plot_navigation_proj(lats,lons,goes_l1_obj, options):
     return plot_nav_options
 
 
-def set_plot_navigation_bm(lats,lons,goes_l1_obj, options):
+def set_plot_navigation_bm(lats,lons,sat_obj, options):
     """
     Collects the various navigation options and does any required tweaking
     before passing to the plotting method.
@@ -261,7 +261,7 @@ def set_plot_navigation_bm(lats,lons,goes_l1_obj, options):
         LOG.debug("({}) (lon,lat):({},{})".format(crnr,lons[crnr_idx],lats[crnr_idx]))
 
 
-    subsatellite_longitude = goes_l1_obj.attrs['Subsatellite_Longitude']
+    subsatellite_longitude = sat_obj.attrs['Subsatellite_Longitude']
     LOG.info('File subsatellite_Longitude = {:6.1f}'.format(subsatellite_longitude))
 
     #print "lon_0 = {}".format(options.lon_0)
@@ -417,33 +417,33 @@ def set_plot_navigation_bm(lats,lons,goes_l1_obj, options):
     return plot_nav_options
 
 
-def list_l1_datasets(options,goes_obj,sat_obj):
+def list_l1_datasets(options,sat_l1_obj,sat_obj):
     # Get some spacecraft and dataset name info...
     dataset_prefix = ""
     try:
-        chan_convention = goes_obj.attrs['Channel_Number_Convention']
+        chan_convention = sat_l1_obj.attrs['Channel_Number_Convention']
         if 'instrument-native' in chan_convention:
-            spacecraft = goes_obj.attrs['Spacecraft_Name'].lower()
+            spacecraft = sat_l1_obj.attrs['Spacecraft_Name'].lower()
             dataset_prefix = "{}_".format(string.replace(spacecraft,'-','_'))
     except KeyError:
         LOG.warn('No Channel_Number_Convention attribute in in \n\t{}, is this a level-2 file? Aborting.\n'
                 .format(options.input_file))
         return
 
-    lines =  len(goes_obj.file_obj.dimensions['lines'])
-    elements =  len(goes_obj.file_obj.dimensions['elements'])
+    lines =  len(sat_l1_obj.file_obj.dimensions['lines'])
+    elements =  len(sat_l1_obj.file_obj.dimensions['elements'])
 
     # If we want to list the datasets, do that here and exit
     if options.list_datasets:
         LOG.info('Datasets in {}:\n'.format(options.input_file))
 
-        goes_l1_obj_dsets = []
-        goes_l1_obj_dsets_len = 0
-        goes_l1_obj_cmaps = []
-        goes_l1_obj_logscale = []
+        sat_l1_obj_dsets = []
+        sat_l1_obj_dsets_len = 0
+        sat_l1_obj_cmaps = []
+        sat_l1_obj_logscale = []
 
-        for dsets in goes_obj.datanames:
-            data_obj = goes_obj.Dataset(goes_obj,dsets)
+        for dsets in sat_l1_obj.datanames:
+            data_obj = sat_l1_obj.Dataset(sat_l1_obj,dsets)
             ndim = data_obj.dset.ndim
             if ndim != 2:
                 continue
@@ -454,10 +454,10 @@ def list_l1_datasets(options,goes_obj,sat_obj):
             if (rows==lines) and (cols==elements):
                 dataset = string.replace(dsets,dataset_prefix,"")
 
-                goes_l1_obj_dsets.append(dsets)
+                sat_l1_obj_dsets.append(dsets)
 
-                if len(goes_l1_obj_dsets[-1]) > goes_l1_obj_dsets_len:
-                    goes_l1_obj_dsets_len = len(goes_l1_obj_dsets[-1])
+                if len(sat_l1_obj_dsets[-1]) > sat_l1_obj_dsets_len:
+                    sat_l1_obj_dsets_len = len(sat_l1_obj_dsets[-1])
 
                 try:
                     LOG.debug('Checking for dataset "{}"...'.format(dataset))
@@ -473,58 +473,58 @@ def list_l1_datasets(options,goes_obj,sat_obj):
                     #cmap_name = dataset_options['fill_colours']
                     cmap_name = "Custom"
 
-                goes_l1_obj_cmaps.append(cmap_name)
+                sat_l1_obj_cmaps.append(cmap_name)
 
                 try:
                     logscale = dataset_options['logscale']
                 except KeyError:
                     logscale = False
 
-                goes_l1_obj_logscale.append(logscale)
+                sat_l1_obj_logscale.append(logscale)
 
-        goes_obj.close_file()
+        sat_l1_obj.close_file()
 
-        str_format = "\t{{:{}s}} | {{:{}s}} | {{}}".format(str(goes_l1_obj_dsets_len),
+        str_format = "\t{{:{}s}} | {{:{}s}} | {{}}".format(str(sat_l1_obj_dsets_len),
                 str(len("Colormap Name")))
         #print str_format
         print str_format.format("Dataset Name","Colormap Name","Logscale")
-        print "\t{}".format("_"*(goes_l1_obj_dsets_len + 3 + len("Colormap Name")+ 3 + len("Logscale")))
-        for dataset,cmap_name,logscale in zip(goes_l1_obj_dsets,goes_l1_obj_cmaps,goes_l1_obj_logscale):
+        print "\t{}".format("_"*(sat_l1_obj_dsets_len + 3 + len("Colormap Name")+ 3 + len("Logscale")))
+        for dataset,cmap_name,logscale in zip(sat_l1_obj_dsets,sat_l1_obj_cmaps,sat_l1_obj_logscale):
             print str_format.format(dataset,cmap_name,logscale)
 
         print """\n\tSee http://matplotlib.org/users/colormaps.html for colormap details."""
 
 
-def list_l2_datasets(options,goes_obj,geocat_data):
+def list_l2_datasets(options,sat_l2_obj,geocat_data):
     # Get some spacecraft and dataset name info...
     dataset_prefix = ""
 
-    if 'Channel_Number_Convention' in goes_obj.attrs.keys():
+    if 'Channel_Number_Convention' in sat_l2_obj.attrs.keys():
         LOG.warn('Channel_Number_Convention attribute in \n\t{}, is this a level-1 file? Aborting.\n'
                 .format(options.input_file))
         #return
 
-    if 'goes' in  goes_obj.attrs['Sensor_Name']:
+    if 'goes' in  sat_l2_obj.attrs['Sensor_Name']:
         sat_obj = geocat_data.Satellite.factory('GOES_NOP')
-    elif 'himawari' in  goes_obj.attrs['Sensor_Name']:
+    elif 'himawari' in  sat_l2_obj.attrs['Sensor_Name']:
         sat_obj = geocat_data.Satellite.factory('Himawari')
     else:
-        LOG.error("Unsupported satellite {}, aborting...".format(goes_l1_obj.attrs['Sensor_Name']))
+        LOG.error("Unsupported satellite {}, aborting...".format(sat_l2_obj.attrs['Sensor_Name']))
 
-    lines =  len(goes_obj.file_obj.dimensions['lines'])
-    elements =  len(goes_obj.file_obj.dimensions['elements'])
+    lines =  len(sat_l2_obj.file_obj.dimensions['lines'])
+    elements =  len(sat_l2_obj.file_obj.dimensions['elements'])
 
     # If we want to list the datasets, do that here and exit
     if options.list_datasets:
         LOG.info('Datasets in {}:\n'.format(options.input_file))
 
-        goes_l2_obj_dsets = []
-        goes_l2_obj_dsets_len = 0
-        goes_l2_obj_cmaps = []
-        goes_l2_obj_logscale = []
+        sat_l2_obj_dsets = []
+        sat_l2_obj_dsets_len = 0
+        sat_l2_obj_cmaps = []
+        sat_l2_obj_logscale = []
 
-        for dsets in goes_obj.datanames:
-            data_obj = goes_obj.Dataset(goes_obj,dsets)
+        for dsets in sat_l2_obj.datanames:
+            data_obj = sat_l2_obj.Dataset(sat_l2_obj,dsets)
             ndim = data_obj.dset.ndim
             if ndim != 2:
                 continue
@@ -535,10 +535,10 @@ def list_l2_datasets(options,goes_obj,geocat_data):
             if (rows==lines) and (cols==elements):
                 dataset = string.replace(dsets,dataset_prefix,"")
 
-                goes_l2_obj_dsets.append(dsets)
+                sat_l2_obj_dsets.append(dsets)
 
-                if len(goes_l2_obj_dsets[-1]) > goes_l2_obj_dsets_len:
-                    goes_l2_obj_dsets_len = len(goes_l2_obj_dsets[-1])
+                if len(sat_l2_obj_dsets[-1]) > sat_l2_obj_dsets_len:
+                    sat_l2_obj_dsets_len = len(sat_l2_obj_dsets[-1])
 
                 try:
                     dataset_options = sat_obj.data[dataset]
@@ -553,30 +553,30 @@ def list_l2_datasets(options,goes_obj,geocat_data):
                     #cmap_name = dataset_options['fill_colours']
                     cmap_name = "Custom"
 
-                goes_l2_obj_cmaps.append(cmap_name)
+                sat_l2_obj_cmaps.append(cmap_name)
 
                 try:
                     logscale = dataset_options['logscale']
                 except KeyError:
                     logscale = False
 
-                goes_l2_obj_logscale.append(logscale)
+                sat_l2_obj_logscale.append(logscale)
 
-        goes_obj.close_file()
+        sat_l2_obj.close_file()
 
-        str_format = "\t{{:{}s}} | {{:{}s}} | {{}}".format(str(goes_l2_obj_dsets_len),
+        str_format = "\t{{:{}s}} | {{:{}s}} | {{}}".format(str(sat_l2_obj_dsets_len),
                 str(len("Colormap Name")))
         #print str_format
         print str_format.format("Dataset Name","Colormap Name","Logscale")
-        print "\t{}".format("_"*(goes_l2_obj_dsets_len + 3 + len("Colormap Name")+ 3 + len("Logscale")))
-        for dataset,cmap_name,logscale in zip(goes_l2_obj_dsets,goes_l2_obj_cmaps,goes_l2_obj_logscale):
+        print "\t{}".format("_"*(sat_l2_obj_dsets_len + 3 + len("Colormap Name")+ 3 + len("Logscale")))
+        for dataset,cmap_name,logscale in zip(sat_l2_obj_dsets,sat_l2_obj_cmaps,sat_l2_obj_logscale):
             print str_format.format(dataset,cmap_name,logscale)
 
         print """\n\tSee http://matplotlib.org/users/colormaps.html for colormap details."""
 
 
 
-def set_plot_styles(goes_obj, data_obj, dataset_options, options, plot_nav_options):
+def set_plot_styles(sat_obj, data_obj, dataset_options, options, plot_nav_options):
     """
     Collects the various plot formatting options and does any required tweaking
     before passing to the plotting method.
@@ -596,11 +596,11 @@ def set_plot_styles(goes_obj, data_obj, dataset_options, options, plot_nav_optio
     plot_style_options['dpi'] = options.dpi
 
     try:
-        image_date_time = goes_obj.attrs['Image_Date_Time']
+        image_date_time = sat_obj.attrs['Image_Date_Time']
         dt_image_date = datetime.strptime(image_date_time,'%Y-%m-%dT%H:%M:%SZ')
     except:
-        image_date = str(goes_obj.attrs['Image_Date'])
-        image_time = str(goes_obj.attrs['Image_Time']).zfill(6)
+        image_date = str(sat_obj.attrs['Image_Date'])
+        image_time = str(sat_obj.attrs['Image_Time']).zfill(6)
         year = str(int(image_date[:3]) + 1900)
         jday = image_date[3:]
         image_date_time = '{}-{}T{}'.format(year,jday,image_time)
@@ -610,7 +610,7 @@ def set_plot_styles(goes_obj, data_obj, dataset_options, options, plot_nav_optio
     # Set the plot title
     if options.plot_title==None:
         plot_style_options['title'] = "{} Imager, {}\n{}z".format(
-                goes_obj.attrs['Spacecraft_Name'],
+                sat_obj.attrs['Spacecraft_Name'],
                 dataset_options['name'],
                 dt_image_date.strftime('%Y-%m-%d %H:%M')
                 )

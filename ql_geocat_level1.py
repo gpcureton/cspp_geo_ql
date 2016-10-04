@@ -3,13 +3,11 @@
 """
 ql_geocat_level1.py
 
-Purpose: Plot a dataset from a geocat level-1 HDF4 file.
+Purpose: Plot a dataset from a geocat level-1 output file.
 
 Preconditions:
-    * pyhdf HDF4 python module
 
 Optional:
-    *
 
 Minimum commandline:
 
@@ -19,7 +17,7 @@ where...
 
     INPUTFILE: The fully qualified path to the geocat level-1 input files.
 
-    DATASET: One of .
+    DATASET: Name of a dataset in the HDF4 or NetCDF file.
 
 
 Created by Geoff Cureton <geoff.cureton@ssec.wisc.edu> on 2015-03-04.
@@ -60,7 +58,7 @@ from netCDF4 import Dataset
 from netCDF4 import num2date
 
 import geocat_l1_data
-from ql_geocat_common import GOES_NetCDF
+from ql_geocat_common import Satellite_NetCDF
 from ql_geocat_common import set_plot_navigation_bm as set_plot_navigation
 from ql_geocat_common import set_plot_styles
 from ql_geocat_common import list_l1_datasets as list_datasets
@@ -76,32 +74,12 @@ def _argparse():
 
     import argparse
 
-    prodChoices=[
-                 'channel_14_brightness_temperature',
-                 'channel_16_brightness_temperature',
-                 'channel_2_reflectance',
-                 'channel_7_brightness_temperature',
-                 'channel_7_emissivity',
-                 'channel_7_reflectance',
-                 'channel_9_brightness_temperature',
-                 'pixel_ecosystem_type',
-                 'pixel_latitude',
-                 'pixel_longitude',
-                 'pixel_relative_azimuth_angle',
-                 'pixel_satellite_zenith_angle',
-                 'pixel_solar_zenith_angle',
-                 'pixel_surface_type'
-                ]
-
     map_res_choice = ['c','l','i']
 
-    #goes_choice = ['goes_e','goes_w']
-    #goes_region_choice = ['FD','CONUS','MESO']
-    goes_region_choice = ['FD']
+    region_choice = ['FD']
 
     defaults = {
                 'input_file':None,
-                'dataset':'channel_2_reflectance',
                 'stride':1,
                 #'lon_0':None,
                 'llcrnrx':None,
@@ -323,18 +301,10 @@ def _argparse():
                       dest="region",
                       default=defaults["region"],
                       type=str,
-                      choices=goes_region_choice,
-                      help="""The GOES region.
+                      choices=region_choice,
+                      help="""The satellite region.
                       [default: '{}']""".format(defaults["region"])
                       )
-
-    #parser.add_argument('--satellite',
-                      #action="store",
-                      #dest="satellite",
-                      #type=str,
-                      #choices=goes_choice,
-                      #help="""The GOES satellite."""
-                      #)
 
     parser.add_argument('--scatter_plot',
                       action="store_true",
@@ -419,32 +389,32 @@ def main():
     outputFilePrefix  = options.outputFilePrefix
 
     # Create and populate the GOES object
-    goes_l1_obj = GOES_NetCDF(options.input_file)
+    sat_l1_obj = Satellite_NetCDF(options.input_file)
 
     # Get a bunch of required data for this satellite
-    if 'goes' in  goes_l1_obj.attrs['Sensor_Name']:
+    if 'goes' in  sat_l1_obj.attrs['Sensor_Name']:
         sat_obj = geocat_l1_data.Satellite.factory('GOES_NOP')
-    elif 'himawari' in  goes_l1_obj.attrs['Sensor_Name']:
+    elif 'himawari' in  sat_l1_obj.attrs['Sensor_Name']:
         sat_obj = geocat_l1_data.Satellite.factory('Himawari')
     else:
-        LOG.error("Unsupported satellite {}, aborting...".format(goes_l1_obj.attrs['Sensor_Name']))
+        LOG.error("Unsupported satellite {}, aborting...".format(sat_l1_obj.attrs['Sensor_Name']))
 
     # If we want to list the datasets, do that here and exit
     if options.list_datasets:
-        list_datasets(options,goes_l1_obj,sat_obj)
+        list_datasets(options,sat_l1_obj,sat_obj)
         return 0
 
-    lats = goes_l1_obj.Dataset(goes_l1_obj,'pixel_latitude').dset
-    lons = goes_l1_obj.Dataset(goes_l1_obj,'pixel_longitude').dset
-    sat_zenith_angle = goes_l1_obj.Dataset(goes_l1_obj,'pixel_satellite_zenith_angle').dset
+    lats = sat_l1_obj.Dataset(sat_l1_obj,'pixel_latitude').dset
+    lons = sat_l1_obj.Dataset(sat_l1_obj,'pixel_longitude').dset
+    sat_zenith_angle = sat_l1_obj.Dataset(sat_l1_obj,'pixel_satellite_zenith_angle').dset
 
     # Strip spacecraft specific information from the channel name...
     dataset_prefix = ""
     try:
-        chan_convention = goes_l1_obj.attrs['Channel_Number_Convention']
+        chan_convention = sat_l1_obj.attrs['Channel_Number_Convention']
         LOG.info('chan_convention: {}'.format(chan_convention))
         if 'instrument-native' in chan_convention:
-            spacecraft = goes_l1_obj.attrs['Spacecraft_Name']
+            spacecraft = sat_l1_obj.attrs['Spacecraft_Name']
             dataset_prefix = "{}_".format(string.replace(spacecraft.lower(),'-','_'))
             dataset = string.replace(options.dataset,dataset_prefix,"")
     except KeyError:
@@ -458,11 +428,11 @@ def main():
 
         LOG.debug('options.dataset name: {}'.format(options.dataset))
 
-        data_obj = goes_l1_obj.Dataset(goes_l1_obj,options.dataset)
+        data_obj = sat_l1_obj.Dataset(sat_l1_obj,options.dataset)
     except Exception:
         LOG.debug(traceback.format_exc())
         LOG.error('"{}" is not a valid options.dataset in {}, aborting.'.format(options.dataset,options.input_file))
-        goes_l1_obj.close_file()
+        sat_l1_obj.close_file()
         return 1
 
     # Use the solar zenith angle to mask off-disk pixels...
@@ -476,7 +446,7 @@ def main():
     else:
         data_mask = np.zeros(data.shape,dtype='bool')
 
-    goes_l1_obj.close_file()
+    sat_l1_obj.close_file()
 
     # Determine the filename
     file_suffix = "{}".format(options.dataset)
@@ -490,12 +460,12 @@ def main():
     if output_file!=None and outputFilePrefix!=None :
         output_file = "{}_{}.png".format(outputFilePrefix,file_suffix)
 
-    if 'goes' in  goes_l1_obj.attrs['Sensor_Name']:
+    if 'goes' in  sat_l1_obj.attrs['Sensor_Name']:
         sat_obj = geocat_l1_data.Satellite.factory('GOES_NOP')
-    elif 'himawari' in  goes_l1_obj.attrs['Sensor_Name']:
+    elif 'himawari' in  sat_l1_obj.attrs['Sensor_Name']:
         sat_obj = geocat_l1_data.Satellite.factory('Himawari')
     else:
-        LOG.error("Unsupported satellite {}, aborting...".format(goes_l1_obj.attrs['Sensor_Name']))
+        LOG.error("Unsupported satellite {}, aborting...".format(sat_l1_obj.attrs['Sensor_Name']))
 
     # Get the dataset options
     try:
@@ -508,10 +478,10 @@ def main():
     if options.unnavigated :
         plot_nav_options = {}
     else:
-        plot_nav_options = set_plot_navigation(lats,lons,goes_l1_obj,options)
+        plot_nav_options = set_plot_navigation(lats,lons,sat_l1_obj,options)
 
     # Set the plot styles
-    plot_style_options = set_plot_styles(goes_l1_obj,data_obj,
+    plot_style_options = set_plot_styles(sat_l1_obj,data_obj,
             dataset_options,options,plot_nav_options)
 
     plot_style_options['version'] = cspp_geo_version

@@ -3,13 +3,11 @@
 """
 ql_geocat_level2.py
 
-Purpose: Plot a dataset from a geocat level-2 HDF4 file.
+Purpose: Plot a dataset from a geocat level-2 output file.
 
 Preconditions:
-    * pyhdf HDF4 python module
 
 Optional:
-    *
 
 Minimum commandline:
 
@@ -19,7 +17,7 @@ where...
 
     INPUTFILE: The fully qualified path to the geocat level-2 input files.
 
-    DATASET: One of .
+    DATASET: Name of a dataset in the HDF4 or NetCDF file.
 
 
 Created by Geoff Cureton <geoff.cureton@ssec.wisc.edu> on 2015-03-05.
@@ -60,7 +58,7 @@ from netCDF4 import Dataset
 from netCDF4 import num2date
 
 import geocat_l2_data
-from ql_geocat_common import GOES_NetCDF
+from ql_geocat_common import Satellite_NetCDF
 from ql_geocat_common import set_plot_navigation_bm as set_plot_navigation
 from ql_geocat_common import set_plot_styles
 from ql_geocat_common import list_l2_datasets as list_datasets
@@ -76,65 +74,12 @@ def _argparse():
 
     import argparse
 
-    prodChoices=[
-        'pixel_latitude',
-        'pixel_longitude',
-        'pixel_solar_zenith_angle',
-        'pixel_satellite_zenith_angle',
-        'pixel_relative_azimuth_angle',
-        'pixel_surface_type',
-        'pixel_ecosystem_type',
-        'nwp_x_index',
-        'nwp_y_index',
-        'baseline_cmask_goes_nop_cloud_mask',
-        'goesnp_ctype_cloud_type',
-        'goesnp_ctype_cloud_phase',
-        'ACHA_mode_6_cloud_top_temperature',
-        'ACHA_mode_6_cloud_top_pressure',
-        'ACHA_mode_6_cloud_top_height',
-        'ACHA_mode_6_cloud_emissivity',
-        'ACHA_mode_7_goes_cloud_optical_depth_vis',
-        'ACHA_mode_7_goes_cloud_top_temperature',
-        'ACHA_mode_7_goes_cloud_top_pressure',
-        'ACHA_mode_7_goes_cloud_top_height',
-        'ACHA_mode_7_goes_cloud_emissivity',
-        'ACHA_mode_7_goes_cloud_particle_effective_radius',
-        'DCOMP_mode_3_cloud_optical_depth_vis',
-        'DCOMP_mode_3_cloud_particle_effective_radius',
-        'DCOMP_mode_3_cloud_liquid_water_path',
-        'DCOMP_mode_3_cloud_ice_water_path',
-        'DCOMP_mode_3_cloud_albedo',
-        'goesr_fog_fog_mask',
-        'goesr_fog_MVFR_fog_probability',
-        'goesr_fog_LIFR_fog_probability',
-        'goesr_fog_IFR_fog_probability',
-        'goesr_fog_IFR_RHonly_Fog_Probability',
-        'goesr_fog_fog_depth',
-        'goesr_fog_ems7_atmospherically_corrected',
-        'goesr_fog_surface_temperature_bias',
-        'goesr_fog_Surface_Temperature_Bias_Global',
-        'goesr_fog_ref2_stddev',
-        'goesr_fog_Sfc_Emiss_Chn7',
-        'goesr_fog_Ems7_Composite',
-        'goesr_fog_Ref7_Composite',
-        'goesr_fog_Ref2_Stddev_Composite',
-        'goesr_fog_bt14_stddev',
-        'goesr_fog_Max_RH_500ft_Layer_AGL',
-        'goesr_fog_Max_RH_1000ft_Layer_AGL',
-        'goesr_fog_Max_RH_3000ft_Layer_AGL',
-        'goesr_fog_Surface_RH',
-        'goesr_fog_Refl_Chn2_StdDev_Lrc',
-        ]
-
     map_res_choice = ['c','l','i']
 
-    #goes_choice = ['goes_e','goes_w']
-    #goes_region_choice = ['FD','CONUS','MESO']
-    goes_region_choice = ['FD']
+    region_choice = ['FD']
 
     defaults = {
                 'input_file':None,
-                'dataset':'baseline_cmask_goes_nop_cloud_mask',
                 'stride':1,
                 #'lon_0':None,
                 'llcrnrx':None,
@@ -356,18 +301,10 @@ def _argparse():
                       dest="region",
                       default=defaults["region"],
                       type=str,
-                      choices=goes_region_choice,
-                      help="""The GOES region.
+                      choices=region_choice,
+                      help="""The satellite region.
                       [default: '{}']""".format(defaults["region"])
                       )
-
-    #parser.add_argument('--satellite',
-                      #action="store",
-                      #dest="satellite",
-                      #type=str,
-                      #choices=goes_choice,
-                      #help="""The GOES satellite."""
-                      #)
 
     parser.add_argument('--scatter_plot',
                       action="store_true",
@@ -451,32 +388,32 @@ def main():
     output_file  = options.output_file
     outputFilePrefix  = options.outputFilePrefix
 
-    # Create and populate the GOES object
-    goes_l2_obj = GOES_NetCDF(options.input_file)
+    # Create and populate the satellite object
+    sat_l2_obj = Satellite_NetCDF(options.input_file)
 
     # If we want to list the datasets, do that here and exit
     if options.list_datasets:
-        list_datasets(options,goes_l2_obj,geocat_l2_data)
+        list_datasets(options,sat_l2_obj,geocat_l2_data)
         return 0
 
-    lats = goes_l2_obj.Dataset(goes_l2_obj,'pixel_latitude').dset
-    lons = goes_l2_obj.Dataset(goes_l2_obj,'pixel_longitude').dset
-    sat_zenith_angle = goes_l2_obj.Dataset(goes_l2_obj,'pixel_satellite_zenith_angle').dset
+    lats = sat_l2_obj.Dataset(sat_l2_obj,'pixel_latitude').dset
+    lons = sat_l2_obj.Dataset(sat_l2_obj,'pixel_longitude').dset
+    sat_zenith_angle = sat_l2_obj.Dataset(sat_l2_obj,'pixel_satellite_zenith_angle').dset
 
     # Read in the desired dataset
     try:
-        #chan_convention = goes_l2_obj.attrs['Channel_Number_Convention']
+        #chan_convention = sat_l2_obj.attrs['Channel_Number_Convention']
         #LOG.info('chan_convention: {}'.format(chan_convention))
-        if 'Channel_Number_Convention' in goes_l2_obj.attrs.keys():
+        if 'Channel_Number_Convention' in sat_l2_obj.attrs.keys():
             LOG.warn('Channel_Number_Convention attribute in \n\t{}, is this a level-1 file? Aborting.\n'
                     .format(options.input_file))
             return 1
 
-        data_obj = goes_l2_obj.Dataset(goes_l2_obj,options.dataset)
+        data_obj = sat_l2_obj.Dataset(sat_l2_obj,options.dataset)
     except Exception:
         LOG.debug(traceback.format_exc())
         LOG.error('"{}" is not a valid options.dataset in {}, aborting.'.format(options.dataset,options.input_file))
-        goes_l2_obj.close_file()
+        sat_l2_obj.close_file()
         return 1
 
     # Use the solar zenith angle to mask off-disk pixels...
@@ -490,7 +427,7 @@ def main():
     else:
         data_mask = np.zeros(data.shape,dtype='bool')
 
-    goes_l2_obj.close_file()
+    sat_l2_obj.close_file()
 
     # Determine the filename
     file_suffix = "{}".format(options.dataset)
@@ -506,12 +443,12 @@ def main():
 
     dataset = options.dataset
 
-    if 'goes' in  goes_l2_obj.attrs['Sensor_Name']:
+    if 'goes' in  sat_l2_obj.attrs['Sensor_Name']:
         sat_obj = geocat_l2_data.Satellite.factory('GOES_NOP')
-    elif 'himawari' in  goes_l2_obj.attrs['Sensor_Name']:
+    elif 'himawari' in  sat_l2_obj.attrs['Sensor_Name']:
         sat_obj = geocat_l2_data.Satellite.factory('Himawari')
     else:
-        LOG.error("Unsupported satellite {}, aborting...".format(goes_l2_obj.attrs['Sensor_Name']))
+        LOG.error("Unsupported satellite {}, aborting...".format(sat_l2_obj.attrs['Sensor_Name']))
 
     # Get the dataset options
     #try:
@@ -529,10 +466,10 @@ def main():
     if options.unnavigated :
         plot_nav_options = {}
     else:
-        plot_nav_options = set_plot_navigation(lats,lons,goes_l2_obj,options)
+        plot_nav_options = set_plot_navigation(lats,lons,sat_l2_obj,options)
 
     # Set the plot styles
-    plot_style_options = set_plot_styles(goes_l2_obj,data_obj,
+    plot_style_options = set_plot_styles(sat_l2_obj,data_obj,
             dataset_options,options,plot_nav_options)
 
     plot_style_options['version'] = cspp_geo_version
