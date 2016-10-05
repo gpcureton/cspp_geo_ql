@@ -463,7 +463,7 @@ def list_l1_datasets(options,sat_l1_obj,sat_obj):
                     LOG.debug('Checking for dataset "{}"...'.format(dataset))
                     dataset_options = sat_obj.data[dataset]
                 except KeyError:
-                    LOG.warn('Unknown generic dataset "{}", defaulting to "unknown"'.format(dsets))
+                    #LOG.warn('Unknown generic dataset "{}", defaulting to "unknown"'.format(dsets))
                     dataset_options = sat_obj.data['unknown']
                     dataset_options['name'] = dataset
 
@@ -543,7 +543,7 @@ def list_l2_datasets(options,sat_l2_obj,geocat_data):
                 try:
                     dataset_options = sat_obj.data[dataset]
                 except KeyError:
-                    LOG.warn('Unknown generic dataset "{}", defaulting to "unknown"'.format(dsets))
+                    #LOG.warn('Unknown generic dataset "{}", defaulting to "unknown"'.format(dsets))
                     dataset_options = sat_obj.data['unknown']
                     dataset_options['name'] = dataset
 
