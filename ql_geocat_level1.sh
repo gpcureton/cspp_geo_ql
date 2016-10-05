@@ -10,7 +10,7 @@ if [ -z "$CSPP_GEO_GEOCAT_HOME" ]; then
     exit 1
 fi
 
-. ${CSPP_GEO_GEOCAT_HOME}/geocat_runtime.bash
+. ${CSPP_GEO_GEOCAT_HOME}/geocat_runtime.sh
 
 usage() {
     $PY $CSPP_GEO_GEOCAT_HOME/l2/ql_geocat_level1.py --help
