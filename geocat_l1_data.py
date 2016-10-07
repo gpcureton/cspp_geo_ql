@@ -95,7 +95,7 @@ class Satellite(object):
                 'country_color':'magenta',
                 'meridian_color':'yellow',
                 #'cmap':g1_cmaps.geocat_colormaps.get_cmap_ice_water(),
-                'cmap':cm.cubehelix,
+                'cmap':g1_cmaps.viridis,
                 'n_levels':256
                 }
     common_data['pixel_latitude'] = {
@@ -181,7 +181,7 @@ class Satellite(object):
                 'country_color':'magenta',
                 'meridian_color':'yellow',
                 #'cmap':g1_cmaps.geocat_colormaps.get_cmap_ice_water(),
-                'cmap':cm.cubehelix,
+                'cmap':g1_cmaps.viridis,
                 'n_levels':256
                 }
     common_data['unknown'] = {
@@ -195,7 +195,7 @@ class Satellite(object):
                 'coastline_color':'cyan',
                 'country_color':'magenta',
                 'meridian_color':'yellow',
-                'cmap':cm.cubehelix,
+                'cmap':g1_cmaps.viridis,
                 'n_levels':256
                 }
 
