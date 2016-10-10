@@ -254,12 +254,15 @@ class Himawari(Satellite):
         for chan in geocat_reflectance_channels:
             data['ahi_channel_{}_reflectance'.format(chan)] = copy(Satellite.refl_dict)
             data['ahi_channel_{}_reflectance'.format(chan)]['name'] = 'Channel {} reflectance'.format(chan)
+            data['ahi_channel_{}_reflectance'.format(chan)]['dset_name'] = 'ahi_channel_{}_reflectance'.format(chan)
         for chan in geocat_emissivity_channels:
             data['ahi_channel_{}_emissivity'.format(chan)] = copy(Satellite.emis_dict)
             data['ahi_channel_{}_emissivity'.format(chan)]['name'] = 'Channel {} emissivity'.format(chan)
+            data['ahi_channel_{}_emissivity'.format(chan)]['dset_name'] = 'ahi_channel_{}_emissivity'.format(chan)
         for chan in geocat_btemperature_channels:
             data['ahi_channel_{}_brightness_temperature'.format(chan)] = copy(Satellite.bt_dict)
             data['ahi_channel_{}_brightness_temperature'.format(chan)]['name'] = 'Channel {} brightness temperature'.format(chan)
+            data['ahi_channel_{}_brightness_temperature'.format(chan)]['dset_name'] = 'ahi_channel_{}_brightness_temperature'.format(chan)
 
         data.update(Satellite.common_data)
 
