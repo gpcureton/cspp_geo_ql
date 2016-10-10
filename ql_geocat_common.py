@@ -140,7 +140,7 @@ class Satellite_NetCDF():
 
     class Dataset():
 
-        def __init__(selfd,L1_obj,dataname):
+        def __init__(selfd,L1_obj,dataname,data=True):
 
             selfd.dataname = dataname
             LOG.debug("selfd.dataname = {}".format(selfd.dataname))
@@ -151,8 +151,11 @@ class Satellite_NetCDF():
             for attr_key in selfd.dset_obj.ncattrs():
                 selfd.attrs[attr_key] = getattr(selfd.dset_obj,attr_key)
 
-            selfd.dset = ma.masked_equal(selfd.dset_obj[:],selfd.attrs['_FillValue'])
-            #selfd.dset = selfd.dset * selfd.attrs['scale_factor'] + selfd.attrs['add_offset']
+            LOG.debug("data = {}".format(data))
+            if data:
+                selfd.dset = ma.masked_equal(selfd.dset_obj[:],selfd.attrs['_FillValue'])
+
+            #selfd.dset = ma.masked_equal(selfd.dset_obj[:],selfd.attrs['_FillValue'])
 
     def close_file(self):
         LOG.debug('Closing {}...'.format(self.input_file))
@@ -443,12 +446,12 @@ def list_l1_datasets(options,sat_l1_obj,sat_obj):
         sat_l1_obj_logscale = []
 
         for dsets in sat_l1_obj.datanames:
-            data_obj = sat_l1_obj.Dataset(sat_l1_obj,dsets)
-            ndim = data_obj.dset.ndim
+            data_obj = sat_l1_obj.Dataset(sat_l1_obj,dsets,data=False)
+            ndim = data_obj.dset_obj.ndim
             if ndim != 2:
                 continue
-            rows = data_obj.dset.shape[0]
-            cols = data_obj.dset.shape[1]
+            rows = data_obj.dset_obj.shape[0]
+            cols = data_obj.dset_obj.shape[1]
             del(data_obj)
 
             if (rows==lines) and (cols==elements):
@@ -524,12 +527,12 @@ def list_l2_datasets(options,sat_l2_obj,geocat_data):
         sat_l2_obj_logscale = []
 
         for dsets in sat_l2_obj.datanames:
-            data_obj = sat_l2_obj.Dataset(sat_l2_obj,dsets)
-            ndim = data_obj.dset.ndim
+            data_obj = sat_l2_obj.Dataset(sat_l2_obj,dsets,data=False)
+            ndim = data_obj.dset_obj.ndim
             if ndim != 2:
                 continue
-            rows = data_obj.dset.shape[0]
-            cols = data_obj.dset.shape[1]
+            rows = data_obj.dset_obj.shape[0]
+            cols = data_obj.dset_obj.shape[1]
             del(data_obj)
 
             if (rows==lines) and (cols==elements):
@@ -708,10 +711,11 @@ def plot_image_continuous(data,data_mask,png_file,
     log_plot      = plot_style_options['log_plot']
     dpi           = plot_style_options['dpi']
 
+    LOG.debug("dataset_options['dset_name'] = '{}'".format(dataset_options['dset_name']))
+
     '''
     Plot the input dataset in in native data coordinates
     '''
-
     # If our data is all missing, return
     if (np.sum(data_mask) == data.size):
         LOG.warn('Entire "{}" dataset is missing, aborting'.format(dataset_options['dset_name']))
