@@ -612,7 +612,7 @@ def set_plot_styles(sat_obj, data_obj, dataset_options, options, plot_nav_option
 
     # Set the plot title
     if options.plot_title==None:
-        plot_style_options['title'] = "{} Imager, {}\n{}z".format(
+        plot_style_options['title'] = "{} Imager, {}\n{}Z".format(
                 sat_obj.attrs['Spacecraft_Name'],
                 dataset_options['name'],
                 dt_image_date.strftime('%Y-%m-%d %H:%M')

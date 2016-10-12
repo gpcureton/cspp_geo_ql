@@ -199,7 +199,7 @@ def _argparse():
                       default=defaults["list_datasets"],
                       help="""List the available datasets, the default colormap
                       and whether a log plot is created by default, then exit.
-                      The required dataset may be given as 'None'."""
+                      The required dataset must be given as 'None'."""
                       )
 
     parser.add_argument('--logscale',
