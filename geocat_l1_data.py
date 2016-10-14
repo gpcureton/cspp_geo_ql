@@ -109,7 +109,7 @@ class Satellite(object):
                 'coastline_color':'cyan',
                 'country_color':'magenta',
                 'meridian_color':'yellow',
-                'cmap':cm.Blues,
+                'cmap':g1_cmaps.viridis,
                 'n_levels':256
                 }
     common_data['pixel_longitude'] = {
@@ -123,7 +123,7 @@ class Satellite(object):
                 'coastline_color':'cyan',
                 'country_color':'magenta',
                 'meridian_color':'yellow',
-                'cmap':cm.Blues,
+                'cmap':g1_cmaps.viridis,
                 'n_levels':256
                 }
     common_data['pixel_relative_azimuth_angle'] = {
@@ -137,7 +137,7 @@ class Satellite(object):
                 'coastline_color':'cyan',
                 'country_color':'magenta',
                 'meridian_color':'yellow',
-                'cmap':cm.Blues,
+                'cmap':g1_cmaps.viridis,
                 'n_levels':256
                 }
     common_data['pixel_satellite_zenith_angle'] = {
@@ -151,7 +151,7 @@ class Satellite(object):
                 'coastline_color':'cyan',
                 'country_color':'magenta',
                 'meridian_color':'yellow',
-                'cmap':cm.Blues,
+                'cmap':g1_cmaps.viridis,
                 'n_levels':256
                 }
     common_data['pixel_solar_zenith_angle'] = {
@@ -165,7 +165,7 @@ class Satellite(object):
                 'coastline_color':'cyan',
                 'country_color':'magenta',
                 'meridian_color':'yellow',
-                'cmap':cm.Blues,
+                'cmap':g1_cmaps.viridis,
                 'n_levels':256
                 }
     common_data['pixel_surface_type'] = {
@@ -214,14 +214,22 @@ class GOES_NOP(Satellite):
         for chan in geocat_reflectance_channels:
             data['channel_{}_reflectance'.format(chan)] = copy(Satellite.refl_dict)
             data['channel_{}_reflectance'.format(chan)]['name'] = 'Channel {} reflectance'.format(chan)
+            data['channel_{}_reflectance'.format(chan)]['dset_name'] = 'channel_{}_reflectance'.format(chan)
         for chan in geocat_emissivity_channels:
             data['channel_{}_emissivity'.format(chan)] = copy(Satellite.emis_dict)
             data['channel_{}_emissivity'.format(chan)]['name'] = 'Channel {} emissivity'.format(chan)
+            data['channel_{}_emissivity'.format(chan)]['dset_name'] = 'channel_{}_emissivity'.format(chan)
         for chan in geocat_btemperature_channels:
             data['channel_{}_brightness_temperature'.format(chan)] = copy(Satellite.bt_dict)
             data['channel_{}_brightness_temperature'.format(chan)]['name'] = 'Channel {} brightness temperature'.format(chan)
+            data['channel_{}_brightness_temperature'.format(chan)]['dset_name'] = 'channel_{}_brightness_temperature'.format(chan)
+
 
         data.update(Satellite.common_data)
+
+        for common_dset in Satellite.common_data.keys():
+            data[common_dset]['dset_name'] = common_dset
+
 
         data['imager_channel_1_reflectance'] = data['channel_2_reflectance']
         data['imager_channel_2_brightness_temperature'] = data['channel_7_brightness_temperature']
@@ -265,6 +273,9 @@ class Himawari(Satellite):
             data['ahi_channel_{}_brightness_temperature'.format(chan)]['dset_name'] = 'ahi_channel_{}_brightness_temperature'.format(chan)
 
         data.update(Satellite.common_data)
+
+        for common_dset in Satellite.common_data.keys():
+            data[common_dset]['dset_name'] = common_dset
 
         self.data = data
 
