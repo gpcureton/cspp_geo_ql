@@ -292,6 +292,9 @@ class Satellite(object):
     common_data['night_optprop_cloud_ice_water_path'] = copy(common_data['DCOMP_mode_3_cloud_ice_water_path'])
     common_data['night_optprop_cloud_ice_water_path']['dset_name'] = 'night_optprop_cloud_ice_water_path'
     common_data['night_optprop_cloud_ice_water_path']['name'] = 'Cloud Ice Water Path'
+    common_data['ACHA_mode_8_cloud_ice_water_path'] = copy(common_data['DCOMP_mode_3_cloud_ice_water_path'])
+    common_data['ACHA_mode_8_cloud_ice_water_path']['dset_name'] = 'ACHA_mode_8_cloud_ice_water_path'
+    common_data['ACHA_mode_8_cloud_ice_water_path']['name'] = 'Cloud Ice Water Path'
 
     common_data['DCOMP_mode_3_cloud_liquid_water_path'] = {
             'dset_name':'DCOMP_mode_3_cloud_liquid_water_path',
@@ -311,6 +314,9 @@ class Satellite(object):
     common_data['night_optprop_cloud_liquid_water_path'] = copy(common_data['DCOMP_mode_3_cloud_liquid_water_path'])
     common_data['night_optprop_cloud_liquid_water_path']['dset_name'] = 'night_optprop_cloud_liquid_water_path'
     common_data['night_optprop_cloud_liquid_water_path']['name'] = 'Cloud Liquid Water Path'
+    common_data['ACHA_mode_8_cloud_liquid_water_path'] = copy(common_data['DCOMP_mode_3_cloud_liquid_water_path'])
+    common_data['ACHA_mode_8_cloud_liquid_water_path']['dset_name'] = 'ACHA_mode_8_cloud_liquid_water_path'
+    common_data['ACHA_mode_8_cloud_liquid_water_path']['name'] = 'Cloud Liquid Water Path'
 
     common_data['DCOMP_mode_3_cloud_optical_depth_vis'] = {
             'dset_name':'DCOMP_mode_3_cloud_optical_depth_vis',
@@ -349,6 +355,9 @@ class Satellite(object):
     common_data['night_optprop_cloud_particle_effective_radius'] = copy(common_data['DCOMP_mode_3_cloud_particle_effective_radius'])
     common_data['night_optprop_cloud_particle_effective_radius']['dset_name'] = 'night_optprop_cloud_particle_effective_radius'
     common_data['night_optprop_cloud_particle_effective_radius']['name'] = 'Cloud Particle Effective Radius'
+    common_data['ACHA_mode_8_cloud_particle_effective_radius'] = copy(common_data['DCOMP_mode_3_cloud_particle_effective_radius'])
+    common_data['ACHA_mode_8_cloud_particle_effective_radius']['dset_name'] = 'ACHA_mode_8_cloud_particle_effective_radius'
+    common_data['ACHA_mode_8_cloud_particle_effective_radius']['name'] = 'Cloud Particle Effective Radius'
 
     common_data['goesr_fog_IFR_fog_probability'] = {
             'dset_name':'goesr_fog_IFR_fog_probability',
