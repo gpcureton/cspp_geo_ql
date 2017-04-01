@@ -13,7 +13,7 @@ fi
 . ${CSPP_GEO_GEOCAT_HOME}/geocat_runtime.sh
 
 usage() {
-    $PY $CSPP_GEO_GEOCAT_HOME/l2/ql_geocat_level1.py --help
+    $PY $CSPP_GEO_GEOCAT_HOME/scripts/ql_geocat_level1.py --help
 }
 
 if [ -z "$1" ]; then
@@ -21,5 +21,5 @@ if [ -z "$1" ]; then
     exit 3
 fi
 
-$PY ${CSPP_GEO_GEOCAT_HOME}/l2/ql_geocat_level1.py "$@"
+$PY ${CSPP_GEO_GEOCAT_HOME}/scripts/ql_geocat_level1.py "$@"
 

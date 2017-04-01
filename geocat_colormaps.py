@@ -22,7 +22,7 @@ Copyright (c) 2012-2015 University of Wisconsin Regents. All rights reserved.
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from matplotlib.colors import Colormap, normalize, LinearSegmentedColormap,ListedColormap
+from matplotlib.colors import Colormap, Normalize, LinearSegmentedColormap,ListedColormap
 from matplotlib import cm as cm
 import numpy as np
 import time

@@ -107,7 +107,7 @@ def _argparse():
     description = '''Create a plot of a level-1 dataset from a geocat netCDF4 file.'''
 
     usage = "usage: %prog [mandatory args] [options]"
-    version = 'CSPP Geo GEOCAT v1.0beta'
+    version = 'cspp-geo-geocat-1.0a1'
 
     parser = argparse.ArgumentParser(
                                      description=description
@@ -412,7 +412,7 @@ def main():
     dataset_prefix = ""
     try:
         chan_convention = sat_l1_obj.attrs['Channel_Number_Convention']
-        LOG.info('chan_convention: {}'.format(chan_convention))
+        LOG.debug('chan_convention: {}'.format(chan_convention))
         if 'instrument-native' in chan_convention:
             spacecraft = sat_l1_obj.attrs['Spacecraft_Name']
             dataset_prefix = "{}_".format(string.replace(spacecraft.lower(),'-','_'))
