@@ -292,9 +292,6 @@ def set_plot_navigation_bm(lats,lons,sat_obj, options):
        ma.is_masked(lats[corners[2]]) and ma.is_masked(lats[corners[3]]):
         is_full_disk = True
 
-    if options.region == "FD":
-        is_full_disk = True
-
     if is_full_disk:
 
         LOG.info("This image is full disk")
@@ -308,7 +305,7 @@ def set_plot_navigation_bm(lats,lons,sat_obj, options):
         LOG.info("This image is NOT full disk")
 
         # Get the north, south, east and west edges of the plot region (in map
-        # coordinates). Check that the edge isnn't all missing, and step towards
+        # coordinates). Check that the edge isn't all missing, and step towards
         # center as necessary.
 
         # Western edge

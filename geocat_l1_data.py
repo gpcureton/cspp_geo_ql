@@ -199,6 +199,9 @@ class Satellite(object):
                 'n_levels':256
                 }
 
+    def set_subsatellite_lon(self, lon):
+        self.subsatellite_lon = lon
+
 
 class GOES_NOP(Satellite):
 
@@ -208,6 +211,10 @@ class GOES_NOP(Satellite):
         geocat_reflectance_channels = [2, 7]
         geocat_emissivity_channels = [7]
         geocat_btemperature_channels = [7, 9, 14, 16]
+
+        self.subsatellite_lon = {}
+        self.subsatellite_lon['goes13'] = -75.
+        self.subsatellite_lon['goes15'] = -135.
 
         data = {}
 
@@ -256,6 +263,10 @@ class Himawari(Satellite):
         geocat_reflectance_channels = [1, 2, 3, 4, 5, 6, 7]
         geocat_emissivity_channels = [7]
         geocat_btemperature_channels = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+
+        self.subsatellite_lon = {}
+        self.subsatellite_lon['him8'] = 140.7
+        self.subsatellite_lon['him9'] = 140.7
 
         data = {}
 

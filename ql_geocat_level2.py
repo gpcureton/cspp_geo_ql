@@ -42,6 +42,7 @@ from os import path,uname,environ
 import string
 import re
 import uuid
+import argparse
 from shutil import rmtree,copyfile
 from glob import glob
 from time import time
@@ -72,23 +73,31 @@ def _argparse():
     Method to encapsulate the option parsing and various setup tasks.
     '''
 
-    import argparse
+    # Do we need the expert help messages...
+    is_expert = False
+    if '--expert' in sys.argv:
+        expert_index = sys.argv.index('--expert')
+        sys.argv[expert_index] = '--help'
+        is_expert = True
+    elif '-x' in sys.argv  :
+        expert_index = sys.argv.index('-x')
+        sys.argv[expert_index] = '--help'
+        is_expert = True
+    else:
+        pass
 
     map_res_choice = ['c','l','i']
-
-    region_choice = ['FD']
 
     defaults = {
                 'input_file':None,
                 'stride':1,
-                #'lon_0':None,
+                'viewport_radius': 5.,
                 'llcrnrx':None,
                 'llcrnry':None,
                 'urcrnrx':None,
                 'urcrnry':None,
                 'plotMin'  : None,
                 'plotMax'  : None,
-                'region' : None,
                 'map_axis' : [0.10, 0.15, 0.80, 0.8],
                 'cbar_axis' : [0.10 , 0.05, 0.8 , 0.05],
                 'image_size' : [7.5, 7.5],
@@ -107,10 +116,12 @@ def _argparse():
     description = '''Create a plot of a level-2 dataset from a geocat netCDF4 file.'''
 
     usage = "usage: %prog [mandatory args] [options]"
-    version = 'cspp-geo-geocat-1.0a1'
+    version = 'cspp-geo-geocat-1.0a2'
 
     parser = argparse.ArgumentParser(
-                                     description=description
+                                     description=description,
+                                     formatter_class=argparse.RawTextHelpFormatter,
+                                     add_help=False,
                                      )
 
     # Mandatory/positional arguments
@@ -119,39 +130,39 @@ def _argparse():
                       action='store',
                       dest='input_file',
                       type=str,
-                      help='''The fully qualified path to a single geocat level-2
-                      NetCDF4 input file.'''
+                      help='''The fully qualified path to a single geocat level-2 NetCDF4''' \
+                              ''' input file.'''
                       )
 
     parser.add_argument(
                       action="store",
                       dest="dataset",
                       type=str,
-                      help='''The geocat level-2 dataset to plot. See the
-                      --list_datasets option for available datasets.'''
+                      help='''The geocat level-2 dataset to plot. See the --list_datasets''' \
+                              ''' option for available datasets.'''
                       )
 
     # Optional arguments
 
-    parser.add_argument('--cbar_axis',
+    parser.add_argument('--cbar-axis',
                       action="store",
                       dest="cbar_axis",
                       default=defaults["cbar_axis"],
                       type=float,
                       nargs=4,
                       metavar=('LEFT', 'BOTTOM', 'WIDTH', 'HEIGHT'),
-                      help="""Set the colorbar axes within the figure at position
-                      [*left*, *bottom*, *width*, *height*] where all quantities
-                      are in the range [0..1].[default: '{}']
-                      """.format(defaults["cbar_axis"])
+                      help='''Set the colorbar axes within the figure at position''' \
+                              ''' [*left*, *bottom*, *width*,\n*height*] where all quantities''' \
+                              ''' are in the range [0..1]. [default: '{}']'''.format(
+                                  defaults["cbar_axis"]) if is_expert else argparse.SUPPRESS
                       )
 
-    parser.add_argument('--cbar_title',
+    parser.add_argument('--cbar-title',
                       action="store",
                       dest="cbar_title",
                       type=str,
                       help='''The colourbar title. Must be placed in double quotes.
-                      '''
+                      ''' if is_expert else argparse.SUPPRESS
                       )
 
     parser.add_argument('--cmap',
@@ -159,8 +170,9 @@ def _argparse():
                       dest="cmap",
                       default=defaults["cmap"],
                       type=str,
-                      help="""The matplotlib colormap to use. See the --list_datasets
-                      option for details and default values."""
+                      help='''The matplotlib colormap to use. See the --list_datasets option''' \
+                              ''' for details and default values.
+                              ''' if is_expert else argparse.SUPPRESS
                       )
 
     parser.add_argument('-d','--dpi',
@@ -168,99 +180,94 @@ def _argparse():
                       dest="dpi",
                       default='200.',
                       type=float,
-                      help='''The resolution in dots per inch of the output
-                      png file.
-                      [default: {}]'''.format(defaults["dpi"])
+                      help='''The resolution in dots per inch of the output png file.''' \
+                              ''' [default: {}]'''.format(defaults["dpi"]
+                                  ) if is_expert else argparse.SUPPRESS
                       )
 
-    parser.add_argument('--font_scale',
+    parser.add_argument('--font-scale',
                       action="store",
                       dest="font_scale",
                       default=defaults["font_scale"],
                       type=float,
-                      help='''The scale factor to apply to the default font size
-                      for the plot labels. [default: {}]'''.format(defaults["font_scale"])
+                      help='''The scale factor to apply to the default font size for the plot''' \
+                              ''' labels. [default: {}]'''.format(defaults["font_scale"]
+                          ) if is_expert else argparse.SUPPRESS
                       )
 
-    parser.add_argument('--image_size',
+    parser.add_argument('--image-size',
                       action="store",
                       dest="image_size",
                       default=defaults["image_size"],
                       type=float,
                       nargs=2,
                       metavar=('WIDTH', 'HEIGHT'),
-                      help="""The size of the output image [*width*, *height*]
-                      in inches. [default: '{}']""".format(defaults["image_size"])
+                      help='''The size of the output image [*width*, *height*] in inches.''' \
+                              ''' [default: '{}']'''.format(defaults["image_size"]
+                          ) if is_expert else argparse.SUPPRESS
                       )
 
-    parser.add_argument('--list_datasets',
+    parser.add_argument('--list-datasets',
                       action="store_true",
                       dest="list_datasets",
                       default=defaults["list_datasets"],
-                      help="""List the available datasets, the default colormap
-                      and whether a log plot is created by default, then exit.
-                      The required dataset must be given as 'None'."""
-                      )
+                      help='''List the available datasets, the default colormap and whether a''' \
+                              ''' log plot is created\nby default, then exit. The required''' \
+                              ''' dataset must be given as 'None'.''')
 
     parser.add_argument('--logscale',
                       action="store_true",
                       dest="logscale",
-                      help="""Plot the dataset using a logarithmic scale."""
+                      help='''Plot the dataset using a logarithmic scale.
+                      ''' if is_expert else argparse.SUPPRESS
                       )
 
-    #parser.add_argument('--lon_0',
-                      #action="store",
-                      #dest="lon_0",
-                      #type=float,
-                      #help="Center the plot over this longitude."
-                      #)
-
-    parser.add_argument('--map_axis',
+    parser.add_argument('--map-axis',
                       action="store",
                       dest="map_axis",
                       default=defaults["map_axis"],
                       type=float,
                       nargs=4,
                       metavar=('LEFT', 'BOTTOM', 'WIDTH', 'HEIGHT'),
-                      help="""Set the map axes within the figure at position
-                      [*left*, *bottom*, *width*, *height*] where all quantities
-                      are in the range [0..1].[default: '{}']
-                      """.format(defaults["map_axis"])
+                      help='''Set the map axes within the figure at position [*left*, *bottom*,''' \
+                              ''' *width*, *height*]\nwhere all quantities are in the range''' \
+                              ''' [0..1]. [default: '{}']'''.format(defaults["map_axis"]
+                                  ) if is_expert else argparse.SUPPRESS
                       )
 
-    parser.add_argument('-m','--map_res',
+    parser.add_argument('-m','--map-res',
                       action="store",
                       dest="map_res",
                       default=defaults["map_res"],
                       type=str,
                       choices=map_res_choice,
-                      help="""The map coastline resolution. Possible values are
-                      'c' (coarse),'l' (low) and 'i' (intermediate).
-                      [default: '{}']""".format(defaults["map_res"])
+                      help='''The map coastline resolution. Possible values are 'c' (coarse),''' \
+                              ''' 'l' (low) and\n'i' (intermediate). [default: '{}']'''.format(
+                                  defaults["map_res"]) if is_expert else argparse.SUPPRESS
                       )
 
-    parser.add_argument('--no_logscale',
+    parser.add_argument('--no-logscale',
                       action="store_true",
                       dest="no_logscale",
-                      help="""Plot the dataset using a linear scale."""
+                      help='''Plot the dataset using a linear scale.
+                      ''' if is_expert else argparse.SUPPRESS
                       )
 
-    parser.add_argument('-o','--output_file',
+    parser.add_argument('-o','--output-file',
                       action="store",
                       dest="output_file",
                       default=defaults["output_file"],
                       type=str,
-                      help='''The filename of the output png file.
-                      '''
+                      help='''The filename of the output png file.'''
                       )
 
-    parser.add_argument('-O','--output_file_prefix',
+    parser.add_argument('-O','--output-file-prefix',
                       action="store",
                       dest="outputFilePrefix",
                       default=defaults["outputFilePrefix"],
                       type=str,
-                      help="""String to prepend to the automatically generated
-                      png names. [default: {}]""".format(defaults["outputFilePrefix"])
+                      help='''String to prepend to the automatically generated png names.''' \
+                              ''' [default: {}]'''.format(defaults["outputFilePrefix"])
                       )
 
     parser.add_argument('--plotMin',
@@ -279,12 +286,12 @@ def _argparse():
                       help="Maximum value to plot.".format(defaults["plotMax"])
                       )
 
-    parser.add_argument('--plot_title',
+    parser.add_argument('--plot-title',
                       action="store",
                       dest="plot_title",
                       type=str,
-                      help='''The plot title. Must be placed in double quotes.
-                      '''
+                      help='''The plot title. Must be placed in double quotes.''' \
+                              if is_expert else argparse.SUPPRESS
                       )
 
     parser.add_argument('-P','--pointSize',
@@ -292,21 +299,12 @@ def _argparse():
                       dest="pointSize",
                       default=defaults["pointSize"],
                       type=float,
-                      help='''Size of the plot point used to represent each pixel.
-                      [default: {}]'''.format(defaults["pointSize"])
+                      help='''Size of the plot point used to represent each pixel.''' \
+                              ''' [default: {}]'''.format(defaults["pointSize"]
+                          ) if is_expert else argparse.SUPPRESS
                       )
 
-    parser.add_argument('--region',
-                      action="store",
-                      dest="region",
-                      default=defaults["region"],
-                      type=str,
-                      choices=region_choice,
-                      help="""The satellite region.
-                      [default: '{}']""".format(defaults["region"])
-                      )
-
-    parser.add_argument('--scatter_plot',
+    parser.add_argument('--scatter-plot',
                       action="store_true",
                       dest="doScatterPlot",
                       default=defaults["scatter_plot"],
@@ -318,8 +316,8 @@ def _argparse():
                       dest="stride",
                       default=defaults["stride"],
                       type=int,
-                      help='''Sample every STRIDE rows and columns in the data.
-                      [default: {}]'''.format(defaults["stride"])
+                      help='''Sample every STRIDE rows and columns in the data.''' \
+                              ''' [default: {}]'''.format(defaults["stride"])
                       )
 
     parser.add_argument('--unnavigated',
@@ -329,24 +327,52 @@ def _argparse():
                       help="Do not navigate the data, just display the image."
                       )
 
-    parser.add_argument('--viewport',
+    parser.add_argument('--subset',
                       action="store",
                       dest="viewport",
                       type=float,
                       nargs=4,
                       metavar=('LLCRNRX', 'LLCRNRY', 'URCRNRX', 'URCRNRY'),
-                      help="""Lower-left and upper-right coordinates
-                      [*llcrnrx*, *llcrnry*, *urcrnrx*, *urcrnry*] of the projection
-                      viewport, where the default is [-0.5,-0.5,+0.5,+0.5] for a
-                      full disk (for navigated plots only)"""
+                      help='''Lower-left and upper-right coordinates [*llcrnrx*, *llcrnry*,''' \
+                              ''' *urcrnrx*, *urcrnry*]\nof the projection viewport, where the''' \
+                              ''' default is [-0.5,-0.5,+0.5,+0.5] for a full\ndisk (for''' \
+                              ''' navigated plots only)''' if is_expert else argparse.SUPPRESS
                       )
+
+    #parser.add_argument('--subset-lat0',
+                      #action="store",
+                      #dest="lat_0",
+                      #type=float,
+                      #help='''Center the plot over this latitude in the range [-90..90]''' \
+                              #''' degrees. Must be used\nwith the option --subset-lon0.
+                              #''' if is_expert else argparse.SUPPRESS
+                      #)
+
+    #parser.add_argument('--subset-lon0',
+                      #action="store",
+                      #dest="lon_0",
+                      #type=float,
+                      #help='''Center the plot over this longitude in the range [-180..180]''' \
+                              #''' degrees. Must be used\nwith the option --subset-lat0.
+                              #''' if is_expert else argparse.SUPPRESS
+                      #)
+
+    #parser.add_argument('--subset-radius',
+                      #action="store",
+                      #dest="viewport_radius",
+                      #type=float,
+                      #help='''The radius in degrees of the subset region centered on the''' \
+                              #''' coordinate selected\nby --subset-lat0 and --subset-lon.'''
+                              #''' [default: {} degrees]'''.format(defaults["viewport_radius"]
+                                  #) if is_expert else argparse.SUPPRESS
+                      #)
 
     parser.add_argument("-v", "--verbosity",
                       dest='verbosity',
                       action="count",
                       default=2,
-                      help='''each occurrence increases verbosity 1 level from
-                      ERROR: -v=WARNING -vv=INFO -vvv=DEBUG'''
+                      help='''each occurrence increases verbosity 1 level from ERROR:''' \
+                              ''' -v=WARNING -vv=INFO -vvv=DEBUG'''
                       )
 
     parser.add_argument('-V', '--version',
@@ -355,6 +381,17 @@ def _argparse():
                       help='''Print the CSPP Geo package version'''
                       )
 
+    parser.add_argument("-h", "--help",
+                      action='help',
+                      help='''Show this help message and exit.'''
+                      )
+
+    parser.add_argument('-x','--expert',
+                      action="store_true",
+                      dest="is_expert",
+                      default=False,
+                      help="Display all help options, including the expert ones."
+                      )
 
     args = parser.parse_args()
 
@@ -373,6 +410,24 @@ def _argparse():
                         level = level,
                         format = console_logFormat,
                         datefmt = date_format)
+
+    #
+    # Enforce any mutual exclusivity or other relationships between various options.
+    #
+
+    ## We can't give --subset and --subset-lat0 or --subset-lon0 simultaneously...
+    #if args.viewport is not None and (args.lat_0 is not None or args.lon_0 is not None):
+        #parser.error('''Cannot give --subset and (--subset-lat0/--subset-lon0) simultaneously.''')
+
+    ## Both subset  latitude and longitude must be used together...
+    #if (args.lat_0 is not None and args.lon_0 is None) or \
+       #(args.lat_0 is None and args.lon_0 is not None):
+        #parser.error('''--subset-lat0 and --subset-lon0 must be used together.''')
+
+    ## Enforce the ranges of the subsetting cooordinates
+    #if (args.lat_0 is not None and args.lon_0 is None) or \
+       #(args.lat_0 is None and args.lon_0 is not None):
+        #parser.error('''--subset-lat0 and --subset-lon0 must be used together.''')
 
     return args,version
 
@@ -451,11 +506,6 @@ def main():
         LOG.error("Unsupported satellite {}, aborting...".format(sat_l2_obj.attrs['Sensor_Name']))
 
     # Get the dataset options
-    #try:
-        #dataset_options = geocat_l2_data.Dataset_Options.data[dataset]
-    #except KeyError:
-        #dataset_options = geocat_l2_data.Dataset_Options.data['unknown']
-        #dataset_options['name'] = dataset
     try:
         dataset_options = sat_obj.data[dataset]
     except KeyError:

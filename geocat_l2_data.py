@@ -451,6 +451,10 @@ class GOES_NOP(Satellite):
     def __init__(self, *args, **kwargs):
         Satellite.__init__(self, *args, **kwargs)
 
+        self.subsatellite_lon = {}
+        self.subsatellite_lon['goes13'] = -75.
+        self.subsatellite_lon['goes15'] = -135.
+
         data = {}
         data.update(Satellite.common_data)
 
@@ -460,6 +464,10 @@ class Himawari(Satellite):
 
     def __init__(self, *args, **kwargs):
         Satellite.__init__(self, *args, **kwargs)
+
+        self.subsatellite_lon = {}
+        self.subsatellite_lon['him8'] = 140.7
+        self.subsatellite_lon['him9'] = 140.7
 
         data = {}
         data.update(Satellite.common_data)
