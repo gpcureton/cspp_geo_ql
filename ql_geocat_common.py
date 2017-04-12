@@ -1229,15 +1229,23 @@ def plot_map_discrete(lat,lon,data,data_mask,png_file,
     parallel_axes = plot_style_options['parallel_axes']
     meridian_axes = plot_style_options['meridian_axes']
 
+    parallel_division_range = plot_nav_options['parallel_division_range'] 
+    meridian_division_range = plot_nav_options['meridian_division_range'] 
+    LOG.debug("parallel_division_range {}".format(parallel_division_range))
+    LOG.debug("meridian_division_range {}".format(meridian_division_range))
+
+    parallel_divisions = np.arange( -90, 91, parallel_division_range)
+    meridian_divisions = np.arange(-180, 180, meridian_division_range)
+
     m.drawcoastlines(ax=ax,color=coastline_color,linewidth = 0.3)
     m.drawcountries(ax=ax,color=country_color,linewidth = 0.2)
     m.drawstates(ax=ax,color=country_color,linewidth = 0.2)
     m.fillcontinents(color='0.',zorder=0)
 
-    drawparallels(m,np.arange( -90, 91,30), color = meridian_color,
-            linewidth = 0.5,fontsize=font_scale*6,labels=parallel_axes) # left, right, top or bottom
-    drawmeridians(m,np.arange(-180,180,30), color = meridian_color,
-            linewidth = 0.5,fontsize=font_scale*6,labels=meridian_axes) # left, right, top or bottom
+    drawparallels(m, parallel_divisions, color=meridian_color,
+            linewidth=0.5, fontsize=font_scale*6, labels=parallel_axes) # left, right, top or bottom
+    drawmeridians(m, meridian_divisions, color=meridian_color,
+            linewidth=0.5, fontsize=font_scale*6, labels=meridian_axes) # left, right, top or bottom
 
     LOG.debug('data.shape = {}'.format(data.shape))
     LOG.debug('data_mask.shape = {}'.format(data_mask.shape))
