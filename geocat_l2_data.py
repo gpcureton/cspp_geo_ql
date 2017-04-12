@@ -445,6 +445,9 @@ class Satellite(object):
             'n_levels':256
             }
 
+    def set_subsatellite_lon(self, lon):
+        self.subsatellite_lon = lon
+
 
 class GOES_NOP(Satellite):
 

@@ -91,7 +91,7 @@ def _argparse():
     defaults = {
                 'input_file':None,
                 'stride':1,
-                'viewport_radius': 5.,
+                'viewport_radius': 1.,
                 'llcrnrx':None,
                 'llcrnry':None,
                 'urcrnrx':None,
@@ -116,7 +116,7 @@ def _argparse():
     description = '''Create a plot of a level-2 dataset from a geocat netCDF4 file.'''
 
     usage = "usage: %prog [mandatory args] [options]"
-    version = 'cspp-geo-geocat-1.0a2'
+    version = 'cspp-geo-geocat-1.0a3'
 
     parser = argparse.ArgumentParser(
                                      description=description,
@@ -339,33 +339,34 @@ def _argparse():
                               ''' navigated plots only)''' if is_expert else argparse.SUPPRESS
                       )
 
-    #parser.add_argument('--subset-lat0',
-                      #action="store",
-                      #dest="lat_0",
-                      #type=float,
-                      #help='''Center the plot over this latitude in the range [-90..90]''' \
-                              #''' degrees. Must be used\nwith the option --subset-lon0.
-                              #''' if is_expert else argparse.SUPPRESS
-                      #)
+    parser.add_argument('--subset-lat0',
+                      action="store",
+                      dest="lat_0",
+                      type=float,
+                      help='''Center the plot over this latitude in the range [-90..90]''' \
+                              ''' degrees. Must be used\nwith the option --subset-lon0.
+                              ''' if is_expert else argparse.SUPPRESS
+                      )
 
-    #parser.add_argument('--subset-lon0',
-                      #action="store",
-                      #dest="lon_0",
-                      #type=float,
-                      #help='''Center the plot over this longitude in the range [-180..180]''' \
-                              #''' degrees. Must be used\nwith the option --subset-lat0.
-                              #''' if is_expert else argparse.SUPPRESS
-                      #)
+    parser.add_argument('--subset-lon0',
+                      action="store",
+                      dest="lon_0",
+                      type=float,
+                      help='''Center the plot over this longitude in the range [-180..180]''' \
+                              ''' degrees. Must be used\nwith the option --subset-lat0.
+                              ''' if is_expert else argparse.SUPPRESS
+                      )
 
-    #parser.add_argument('--subset-radius',
-                      #action="store",
-                      #dest="viewport_radius",
-                      #type=float,
-                      #help='''The radius in degrees of the subset region centered on the''' \
-                              #''' coordinate selected\nby --subset-lat0 and --subset-lon.'''
-                              #''' [default: {} degrees]'''.format(defaults["viewport_radius"]
-                                  #) if is_expert else argparse.SUPPRESS
-                      #)
+    parser.add_argument('--subset-radius',
+                      action="store",
+                      dest="viewport_radius",
+                      type=float,
+                      default=defaults["viewport_radius"],
+                      help='''The radius in degrees of the subset region centered on the''' \
+                              ''' coordinate selected\nby --subset-lat0 and --subset-lon.'''
+                              ''' [default: {} degrees]'''.format(defaults["viewport_radius"]
+                                  ) if is_expert else argparse.SUPPRESS
+                      )
 
     parser.add_argument("-v", "--verbosity",
                       dest='verbosity',
@@ -415,19 +416,14 @@ def _argparse():
     # Enforce any mutual exclusivity or other relationships between various options.
     #
 
-    ## We can't give --subset and --subset-lat0 or --subset-lon0 simultaneously...
-    #if args.viewport is not None and (args.lat_0 is not None or args.lon_0 is not None):
-        #parser.error('''Cannot give --subset and (--subset-lat0/--subset-lon0) simultaneously.''')
+    # We can't give --subset and --subset-lat0 or --subset-lon0 simultaneously...
+    if args.viewport is not None and (args.lat_0 is not None or args.lon_0 is not None):
+        parser.error('''Cannot give --subset and (--subset-lat0/--subset-lon0) simultaneously.''')
 
-    ## Both subset  latitude and longitude must be used together...
-    #if (args.lat_0 is not None and args.lon_0 is None) or \
-       #(args.lat_0 is None and args.lon_0 is not None):
-        #parser.error('''--subset-lat0 and --subset-lon0 must be used together.''')
-
-    ## Enforce the ranges of the subsetting cooordinates
-    #if (args.lat_0 is not None and args.lon_0 is None) or \
-       #(args.lat_0 is None and args.lon_0 is not None):
-        #parser.error('''--subset-lat0 and --subset-lon0 must be used together.''')
+    # Both subset  latitude and longitude must be used together...
+    if (args.lat_0 is not None and args.lon_0 is None) or \
+       (args.lat_0 is None and args.lon_0 is not None):
+        parser.error('''--subset-lat0 and --subset-lon0 must be used together.''')
 
     return args,version
 
@@ -445,6 +441,9 @@ def main():
 
     # Create and populate the satellite object
     sat_l2_obj = Satellite_NetCDF(options.input_file)
+
+    subsatellite_lon = sat_l2_obj.attrs['Subsatellite_Longitude']
+    LOG.info("File subsatellite_lon = {}".format(subsatellite_lon))
 
     # If we want to list the datasets, do that here and exit
     if options.list_datasets:
@@ -505,6 +504,8 @@ def main():
     else:
         LOG.error("Unsupported satellite {}, aborting...".format(sat_l2_obj.attrs['Sensor_Name']))
 
+    sat_obj.set_subsatellite_lon(subsatellite_lon)
+
     # Get the dataset options
     try:
         dataset_options = sat_obj.data[dataset]
@@ -516,7 +517,7 @@ def main():
     if options.unnavigated :
         plot_nav_options = {}
     else:
-        plot_nav_options = set_plot_navigation(lats,lons,sat_l2_obj,options)
+        plot_nav_options = set_plot_navigation(lats, lons, sat_l2_obj, options)
 
     # Set the plot styles
     plot_style_options = set_plot_styles(sat_l2_obj,data_obj,

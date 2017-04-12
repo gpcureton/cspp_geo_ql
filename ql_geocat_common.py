@@ -244,7 +244,54 @@ def set_plot_navigation_proj(lats,lons,sat_obj, options):
     return plot_nav_options
 
 
-def set_plot_navigation_bm(lats,lons,sat_obj, options):
+def viewport_from_latlon(m, lat, lon, buf=1.):
+    '''
+    Computes the lower-left and upper-right coordinates of a box of width 2*buf degrees, centered 
+    on the coordinate at (lon,lat).
+    '''
+
+    subsatlon = m.projparams['lon_0']
+
+    # Compute the min and max of the longitude- and x-coordinates
+    lons_min = subsatlon - 90. + np.linspace(0.,10.,1001)
+    lons_max = subsatlon + 90. - np.linspace(10.,0.,1001)
+    lons = np.concatenate((lons_min, lons_max))
+    x = ma.masked_equal(m.projtran(lons, np.zeros(lons.shape))[0],1.e30)
+    xmin, xmax = np.min(x),np.max(x)
+
+    lonmin = np.min(ma.masked_array(lons, mask=x.mask))
+    lonmax = np.max(ma.masked_array(lons, mask=x.mask))
+    LOG.debug('lonmin, lonmax = {}, {}'.format(lonmin, lonmax))
+
+    # Compute the min and max of the latitude- and y-coordinates
+    lats_min = -90. + np.linspace(0.,10.,101)
+    lats_max = 90. - np.linspace(10.,0.,101)
+    lats = np.concatenate((lats_min, lats_max))
+    y = ma.masked_equal(m.projtran(subsatlon*np.ones(lats.shape), lats)[1],1.e30)
+    ymin, ymax = np.min(y),np.max(y)
+
+    latmin = np.min(ma.masked_array(lats, mask=y.mask))
+    latmax = np.max(ma.masked_array(lats, mask=y.mask))
+    LOG.debug('latmin, latmax = {}, {}'.format(latmin, latmax))
+
+    lonlat = np.array([lon, lat])
+
+    # Compute the (ll_lon, ll_lat, ur_lon, ur_lat) box or width 2*buf, centered on lonlat
+    #buf = 1.0
+    viewport_lonlat = np.array(list(lonlat - np.array([buf, buf])) + list(lonlat + np.array([buf, buf])))
+    LOG.debug('viewport_lonlat = {}'.format(viewport_lonlat))
+
+    # Convert viewport_lonlat to quicklook viewport coordinates
+    llcrnr_ql = np.array(m.projtran(*viewport_lonlat[:2])) / np.array([ymax, xmax]) - np.array([0.5, 0.5])
+    LOG.debug('llcrnr_ql = {}'.format(llcrnr_ql))
+    urcrnr_ql = np.array(m.projtran(*viewport_lonlat[2:])) / np.array([ymax, xmax]) - np.array([0.5, 0.5])
+    LOG.debug('urcrnr_ql = {}'.format(urcrnr_ql))
+    viewport_ql = np.array(list(llcrnr_ql) + list(urcrnr_ql))
+
+    return viewport_ql, viewport_lonlat
+
+
+def set_plot_navigation_bm(lats, lons, sat_obj, options):
     """
     Collects the various navigation options and does any required tweaking
     before passing to the plotting method.
@@ -265,16 +312,9 @@ def set_plot_navigation_bm(lats,lons,sat_obj, options):
 
 
     subsatellite_longitude = sat_obj.attrs['Subsatellite_Longitude']
-    LOG.info('File subsatellite_Longitude = {:6.1f}'.format(subsatellite_longitude))
-
-    #print "lon_0 = {}".format(options.lon_0)
-    #if options.lon_0 == None:
-        #lon_0 = subsatellite_longitude
-    #else:
-        #lon_0 = options.lon_0
+    LOG.debug('File subsatellite_Longitude = {:6.1f}'.format(subsatellite_longitude))
 
     m1 = Basemap(projection='geos',lon_0=subsatellite_longitude,resolution=None)
-    #m1 = Basemap(projection='geos',lon_0=lon_0,resolution=None)
 
     plot_nav_options = {}
 
@@ -405,11 +445,51 @@ def set_plot_navigation_bm(lats,lons,sat_obj, options):
         plot_nav_options['llcrnrx_map'] = plot_nav_options['llcrnrx'] - x_subsat
         plot_nav_options['llcrnry_map'] = plot_nav_options['llcrnry'] - y_subsat
 
+    # Compute the subsetting window...
+    if options.viewport is not None:
+        plot_nav_options['llcrnrx'] =  options.viewport[0] * plot_nav_options['extent_x']
+        plot_nav_options['llcrnry'] =  options.viewport[1] * plot_nav_options['extent_y']
+        plot_nav_options['urcrnrx'] =  options.viewport[2] * plot_nav_options['extent_x']
+        plot_nav_options['urcrnry'] =  options.viewport[3] * plot_nav_options['extent_y']
+        is_full_disk = False
+    elif (options.lat_0 is not None and options.lon_0 is not None):
+        viewport_ql, viewport_lonlat = viewport_from_latlon(m1, options.lat_0, options.lon_0,
+            buf=options.viewport_radius)
+        LOG.debug('viewport_ql = {}'.format(viewport_ql))
+        LOG.debug('viewport_lonlat = {}'.format(viewport_lonlat))
+        not_visible = False
+        if np.sum(viewport_ql[:2] > 1000.) > 0:
+            LOG.warn('''Lower left corner of subset region (lon={}, lat={}) is not visible,''' \
+                    ''' aborting...'''.format(viewport_lonlat[:2][0], viewport_lonlat[:2][1]))
+            not_visible = True
+        if np.sum(viewport_ql[2:] > 1000.) > 0:
+            LOG.warn('''Upper right corner of subset region (lon={}, lat={}) is not visible,''' \
+                    ''' aborting...'''.format(viewport_lonlat[2:][0], viewport_lonlat[2:][1]))
+            not_visible = True
 
-    plot_nav_options['llcrnrx'] = plot_nav_options['llcrnrx_map'] if options.viewport is None else options.viewport[0] * plot_nav_options['extent_x']
-    plot_nav_options['llcrnry'] = plot_nav_options['llcrnry_map'] if options.viewport is None else options.viewport[1] * plot_nav_options['extent_y']
-    plot_nav_options['urcrnrx'] = plot_nav_options['urcrnrx_map'] if options.viewport is None else options.viewport[2] * plot_nav_options['extent_x']
-    plot_nav_options['urcrnry'] = plot_nav_options['urcrnry_map'] if options.viewport is None else options.viewport[3] * plot_nav_options['extent_y']
+        if not_visible:
+            sys.exit(0)
+
+        is_full_disk = False
+        lat_range = np.abs(viewport_lonlat[3] - viewport_lonlat[1])/2.
+        lat_range = np.floor(lat_range) if lat_range > 1. else lat_range
+
+        lon_range = np.abs(viewport_lonlat[2] - viewport_lonlat[0])/2.
+        lat_range = np.floor(lon_range) if lon_range > 1. else lon_range
+
+        plot_nav_options['parallel_division_range'] = lat_range
+        plot_nav_options['meridian_division_range'] = lon_range
+
+        plot_nav_options['llcrnrx'] =  viewport_ql[0] * plot_nav_options['extent_x']
+        plot_nav_options['llcrnry'] =  viewport_ql[1] * plot_nav_options['extent_y']
+        plot_nav_options['urcrnrx'] =  viewport_ql[2] * plot_nav_options['extent_x']
+        plot_nav_options['urcrnry'] =  viewport_ql[3] * plot_nav_options['extent_y']
+    else:
+        plot_nav_options['llcrnrx'] = plot_nav_options['llcrnrx_map']
+        plot_nav_options['llcrnry'] = plot_nav_options['llcrnry_map']
+        plot_nav_options['urcrnrx'] = plot_nav_options['urcrnrx_map']
+        plot_nav_options['urcrnry'] = plot_nav_options['urcrnry_map']
+
 
     plot_nav_options['lon_0'] = subsatellite_longitude
     plot_nav_options['is_full_disk'] = is_full_disk
@@ -682,6 +762,9 @@ def set_plot_styles(sat_obj, data_obj, dataset_options, options, plot_nav_option
     else:
         pass
 
+    plot_style_options['parallel_divisions'] = np.arange( -90, 91,15)
+    plot_style_options['meridian_divisions'] = np.arange(-180, 180, 15)
+
     plot_style_options['plot_map'] = plot_map_discrete if dataset_options['discrete'] else plot_map_continuous
     plot_style_options['plot_image'] = plot_image_discrete if dataset_options['discrete'] else plot_image_continuous
 
@@ -872,15 +955,23 @@ def plot_map_continuous(lat,lon,data,data_mask,png_file,
     parallel_axes = plot_style_options['parallel_axes']
     meridian_axes = plot_style_options['meridian_axes']
 
+    parallel_division_range = plot_nav_options['parallel_division_range'] 
+    meridian_division_range = plot_nav_options['meridian_division_range'] 
+    LOG.debug("parallel_division_range {}".format(parallel_division_range))
+    LOG.debug("meridian_division_range {}".format(meridian_division_range))
+
+    parallel_divisions = np.arange( -90, 91, parallel_division_range)
+    meridian_divisions = np.arange(-180, 180, meridian_division_range)
+
     m.drawcoastlines(ax=ax,color=coastline_color,linewidth = 0.3)
     m.drawcountries(ax=ax,color=country_color,linewidth = 0.2)
     m.drawstates(ax=ax,color=country_color,linewidth = 0.2)
     m.fillcontinents(color='0.',zorder=0)
 
-    drawparallels(m,np.arange( -90, 91,30), color = meridian_color,
-            linewidth = 0.5,fontsize=font_scale*6,labels=parallel_axes) # left, right, top or bottom
-    drawmeridians(m,np.arange(-180,180,30), color = meridian_color,
-            linewidth = 0.5,fontsize=font_scale*6,labels=meridian_axes) # left, right, top or bottom
+    drawparallels(m, parallel_divisions, color=meridian_color,
+            linewidth=0.5, fontsize=font_scale*6, labels=parallel_axes) # left, right, top or bottom
+    drawmeridians(m, meridian_divisions, color=meridian_color,
+            linewidth=0.5, fontsize=font_scale*6, labels=meridian_axes) # left, right, top or bottom
 
     LOG.debug('data.shape = {}'.format(data.shape))
     LOG.debug('data_mask.shape = {}'.format(data_mask.shape))

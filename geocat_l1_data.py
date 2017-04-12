@@ -291,61 +291,61 @@ class Himawari(Satellite):
         self.data = data
 
 
-class Navigation(Satellite):
+#class Navigation(Satellite):
 
-    navigation = {}
+    #navigation = {}
 
-    navigation['goes_e'] = {
-            'Subsatellite_Longitude': -75.,
-            'FD':{
-                'extent':{'ew':0.3036872 , 'ns':0.3036872},
-                'offset':{'ew':0.        , 'ns':0.}
-            },
-            'CONUS':{
-                'extent':{'ew':0.14        , 'ns':0.084},
-                'offset':{'ew':-0.040248647, 'ns':0.084625052}
-            },
-            'MESO':{
-                'extent':{'ew':0.028     , 'ns':0.028},
-                'offset':{'ew':None      , 'ns':None}
-            }
-
-            #'extent':{
-                #'FD'   : {'ew':0.3036872 , 'ns':0.3036872},
-                #'CONUS': {'ew':0.14      , 'ns':0.084},
-                #'MESO' : {'ew':0.028     , 'ns':0.028}
+    #navigation['goes_e'] = {
+            #'Subsatellite_Longitude': -75.,
+            #'FD':{
+                #'extent':{'ew':0.3036872 , 'ns':0.3036872},
+                #'offset':{'ew':0.        , 'ns':0.}
             #},
-            #'img_center_offset':{
-                #'FD'   : {'ew':0.          , 'ns':0.},
-                #'CONUS': {'ew':-0.040248647, 'ns':0.084625052},
-                #'MESO' : {'ew':None        , 'ns':None}
-            #}
-    }
-
-    navigation['goes_w'] = {
-            'Subsatellite_Longitude': -137.,
-            'FD':{
-                'extent':{'ew':0.3036872 , 'ns':0.3036872},
-                'offset':{'ew':0.        , 'ns':0.}
-            },
-            'CONUS':{
-                'extent':{'ew':0.14        , 'ns':0.084},
-                'offset':{'ew':0.082900064, 'ns':0.083759424}
-            },
-            'MESO':{
-                'extent':{'ew':0.028     , 'ns':0.028},
-                'offset':{'ew':None      , 'ns':None}
-            }
-
-
-            #'extent':{
-                #'FD'   : {'ew':0.3036872 , 'ns':0.3036872},
-                #'CONUS': {'ew':0.14      , 'ns':0.084},
-                #'MESO' : {'ew':0.028     , 'ns':0.028}
+            #'CONUS':{
+                #'extent':{'ew':0.14        , 'ns':0.084},
+                #'offset':{'ew':-0.040248647, 'ns':0.084625052}
             #},
-            #'img_center_offset':{
-                #'FD'   : {'ew':0.         , 'ns':0.},
-                #'CONUS': {'ew':0.082900064, 'ns':0.083759424},
-                #'MESO' : {'ew':None       , 'ns':None}
+            #'MESO':{
+                #'extent':{'ew':0.028     , 'ns':0.028},
+                #'offset':{'ew':None      , 'ns':None}
             #}
-    }
+
+            ##'extent':{
+                ##'FD'   : {'ew':0.3036872 , 'ns':0.3036872},
+                ##'CONUS': {'ew':0.14      , 'ns':0.084},
+                ##'MESO' : {'ew':0.028     , 'ns':0.028}
+            ##},
+            ##'img_center_offset':{
+                ##'FD'   : {'ew':0.          , 'ns':0.},
+                ##'CONUS': {'ew':-0.040248647, 'ns':0.084625052},
+                ##'MESO' : {'ew':None        , 'ns':None}
+            ##}
+    #}
+
+    #navigation['goes_w'] = {
+            #'Subsatellite_Longitude': -137.,
+            #'FD':{
+                #'extent':{'ew':0.3036872 , 'ns':0.3036872},
+                #'offset':{'ew':0.        , 'ns':0.}
+            #},
+            #'CONUS':{
+                #'extent':{'ew':0.14        , 'ns':0.084},
+                #'offset':{'ew':0.082900064, 'ns':0.083759424}
+            #},
+            #'MESO':{
+                #'extent':{'ew':0.028     , 'ns':0.028},
+                #'offset':{'ew':None      , 'ns':None}
+            #}
+
+
+            ##'extent':{
+                ##'FD'   : {'ew':0.3036872 , 'ns':0.3036872},
+                ##'CONUS': {'ew':0.14      , 'ns':0.084},
+                ##'MESO' : {'ew':0.028     , 'ns':0.028}
+            ##},
+            ##'img_center_offset':{
+                ##'FD'   : {'ew':0.         , 'ns':0.},
+                ##'CONUS': {'ew':0.082900064, 'ns':0.083759424},
+                ##'MESO' : {'ew':None       , 'ns':None}
+            ##}
+    #}
