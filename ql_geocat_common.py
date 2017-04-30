@@ -246,7 +246,7 @@ def set_plot_navigation_proj(lats,lons,sat_obj, options):
 
 def viewport_from_latlon(m, lat, lon, buf=1.):
     '''
-    Computes the lower-left and upper-right coordinates of a box of width 2*buf degrees, centered 
+    Computes the lower-left and upper-right coordinates of a box of width 2*buf degrees, centered
     on the coordinate at (lon,lat).
     '''
 
@@ -446,13 +446,20 @@ def set_plot_navigation_bm(lats, lons, sat_obj, options):
         plot_nav_options['llcrnry_map'] = plot_nav_options['llcrnry'] - y_subsat
 
     # Compute the subsetting window...
+
+    plot_nav_options['parallel_division_range'] = None
+    plot_nav_options['meridian_division_range'] = None
+
     if options.viewport is not None:
+
         plot_nav_options['llcrnrx'] =  options.viewport[0] * plot_nav_options['extent_x']
         plot_nav_options['llcrnry'] =  options.viewport[1] * plot_nav_options['extent_y']
         plot_nav_options['urcrnrx'] =  options.viewport[2] * plot_nav_options['extent_x']
         plot_nav_options['urcrnry'] =  options.viewport[3] * plot_nav_options['extent_y']
         is_full_disk = False
+
     elif (options.lat_0 is not None and options.lon_0 is not None):
+
         viewport_ql, viewport_lonlat = viewport_from_latlon(m1, options.lat_0, options.lon_0,
             buf=options.viewport_radius)
         LOG.debug('viewport_ql = {}'.format(viewport_ql))
@@ -475,7 +482,7 @@ def set_plot_navigation_bm(lats, lons, sat_obj, options):
         lat_range = np.floor(lat_range) if lat_range > 1. else lat_range
 
         lon_range = np.abs(viewport_lonlat[2] - viewport_lonlat[0])/2.
-        lat_range = np.floor(lon_range) if lon_range > 1. else lon_range
+        lon_range = np.floor(lon_range) if lon_range > 1. else lon_range
 
         plot_nav_options['parallel_division_range'] = lat_range
         plot_nav_options['meridian_division_range'] = lon_range
@@ -484,12 +491,22 @@ def set_plot_navigation_bm(lats, lons, sat_obj, options):
         plot_nav_options['llcrnry'] =  viewport_ql[1] * plot_nav_options['extent_y']
         plot_nav_options['urcrnrx'] =  viewport_ql[2] * plot_nav_options['extent_x']
         plot_nav_options['urcrnry'] =  viewport_ql[3] * plot_nav_options['extent_y']
+
     else:
+
         plot_nav_options['llcrnrx'] = plot_nav_options['llcrnrx_map']
         plot_nav_options['llcrnry'] = plot_nav_options['llcrnry_map']
         plot_nav_options['urcrnrx'] = plot_nav_options['urcrnrx_map']
         plot_nav_options['urcrnry'] = plot_nav_options['urcrnry_map']
 
+    if is_full_disk:
+        parallel_division_range = 30.
+        meridian_division_range = 30.
+    else:
+        if plot_nav_options['parallel_division_range'] is None:
+            plot_nav_options['parallel_division_range'] = 10.
+        if plot_nav_options['meridian_division_range'] is None:
+            plot_nav_options['meridian_division_range'] = 10.
 
     plot_nav_options['lon_0'] = subsatellite_longitude
     plot_nav_options['is_full_disk'] = is_full_disk
@@ -955,8 +972,8 @@ def plot_map_continuous(lat,lon,data,data_mask,png_file,
     parallel_axes = plot_style_options['parallel_axes']
     meridian_axes = plot_style_options['meridian_axes']
 
-    parallel_division_range = plot_nav_options['parallel_division_range'] 
-    meridian_division_range = plot_nav_options['meridian_division_range'] 
+    parallel_division_range = plot_nav_options['parallel_division_range']
+    meridian_division_range = plot_nav_options['meridian_division_range']
     LOG.debug("parallel_division_range {}".format(parallel_division_range))
     LOG.debug("meridian_division_range {}".format(meridian_division_range))
 
@@ -1229,8 +1246,8 @@ def plot_map_discrete(lat,lon,data,data_mask,png_file,
     parallel_axes = plot_style_options['parallel_axes']
     meridian_axes = plot_style_options['meridian_axes']
 
-    parallel_division_range = plot_nav_options['parallel_division_range'] 
-    meridian_division_range = plot_nav_options['meridian_division_range'] 
+    parallel_division_range = plot_nav_options['parallel_division_range']
+    meridian_division_range = plot_nav_options['meridian_division_range']
     LOG.debug("parallel_division_range {}".format(parallel_division_range))
     LOG.debug("meridian_division_range {}".format(meridian_division_range))
 
