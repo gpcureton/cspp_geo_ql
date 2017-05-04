@@ -253,22 +253,22 @@ def viewport_from_latlon(m, lat, lon, buf=1.):
     subsatlon = m.projparams['lon_0']
 
     # Compute the min and max of the longitude- and x-coordinates
-    lons_min = subsatlon - 90. + np.linspace(0.,10.,1001)
-    lons_max = subsatlon + 90. - np.linspace(10.,0.,1001)
+    lons_min = subsatlon - 90. + np.linspace(0., 10., 1001)
+    lons_max = subsatlon + 90. - np.linspace(10., 0., 1001)
     lons = np.concatenate((lons_min, lons_max))
-    x = ma.masked_equal(m.projtran(lons, np.zeros(lons.shape))[0],1.e30)
-    xmin, xmax = np.min(x),np.max(x)
+    x = ma.masked_equal(m.projtran(lons, np.zeros(lons.shape))[0], 1.e30)
+    xmin, xmax = np.min(x), np.max(x)
 
     lonmin = np.min(ma.masked_array(lons, mask=x.mask))
     lonmax = np.max(ma.masked_array(lons, mask=x.mask))
     LOG.debug('lonmin, lonmax = {}, {}'.format(lonmin, lonmax))
 
     # Compute the min and max of the latitude- and y-coordinates
-    lats_min = -90. + np.linspace(0.,10.,101)
-    lats_max = 90. - np.linspace(10.,0.,101)
+    lats_min = -90. + np.linspace(0., 10., 101)
+    lats_max = 90. - np.linspace(10., 0., 101)
     lats = np.concatenate((lats_min, lats_max))
     y = ma.masked_equal(m.projtran(subsatlon*np.ones(lats.shape), lats)[1],1.e30)
-    ymin, ymax = np.min(y),np.max(y)
+    ymin, ymax = np.min(y), np.max(y)
 
     latmin = np.min(ma.masked_array(lats, mask=y.mask))
     latmax = np.max(ma.masked_array(lats, mask=y.mask))
@@ -447,10 +447,13 @@ def set_plot_navigation_bm(lats, lons, sat_obj, options):
 
     # Compute the subsetting window...
 
+    is_subset = False
     plot_nav_options['parallel_division_range'] = None
     plot_nav_options['meridian_division_range'] = None
 
     if options.viewport is not None:
+
+        is_subset = True
 
         plot_nav_options['llcrnrx'] =  options.viewport[0] * plot_nav_options['extent_x']
         plot_nav_options['llcrnry'] =  options.viewport[1] * plot_nav_options['extent_y']
@@ -459,6 +462,8 @@ def set_plot_navigation_bm(lats, lons, sat_obj, options):
         is_full_disk = False
 
     elif (options.lat_0 is not None and options.lon_0 is not None):
+
+        is_subset = True
 
         viewport_ql, viewport_lonlat = viewport_from_latlon(m1, options.lat_0, options.lon_0,
             buf=options.viewport_radius)
@@ -499,14 +504,27 @@ def set_plot_navigation_bm(lats, lons, sat_obj, options):
         plot_nav_options['urcrnrx'] = plot_nav_options['urcrnrx_map']
         plot_nav_options['urcrnry'] = plot_nav_options['urcrnry_map']
 
+    LOG.debug("plot_nav_options['llcrnrx'] = {}".format(plot_nav_options['llcrnrx']))
+    LOG.debug("plot_nav_options['llcrnry'] = {}".format(plot_nav_options['llcrnry']))
+    LOG.debug("plot_nav_options['urcrnrx'] = {}".format(plot_nav_options['urcrnrx']))
+    LOG.debug("plot_nav_options['urcrnry'] = {}".format(plot_nav_options['urcrnry']))
+
+    #if is_subset:
     if is_full_disk:
-        parallel_division_range = 30.
-        meridian_division_range = 30.
+        plot_nav_options['parallel_division_range'] = 30.
+        plot_nav_options['meridian_division_range'] = 30.
     else:
         if plot_nav_options['parallel_division_range'] is None:
-            plot_nav_options['parallel_division_range'] = 10.
+            plot_nav_options['parallel_division_range'] = 15.
         if plot_nav_options['meridian_division_range'] is None:
-            plot_nav_options['meridian_division_range'] = 10.
+            plot_nav_options['meridian_division_range'] = 15.
+
+    LOG.debug(
+        "plot_nav_options['parallel_division_range'] = {}".format(
+            plot_nav_options['parallel_division_range']))
+    LOG.debug(
+        "plot_nav_options['meridian_division_range'] = {}".format(
+            plot_nav_options['meridian_division_range']))
 
     plot_nav_options['lon_0'] = subsatellite_longitude
     plot_nav_options['is_full_disk'] = is_full_disk

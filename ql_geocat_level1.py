@@ -37,16 +37,19 @@ Copyright (c) 2015 University of Wisconsin Regents. All rights reserved.
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os, sys, logging, traceback
-from os import path,uname,environ
+import os
+import sys
+import logging
+import traceback
+from os import path, uname, environ
 import string
 import re
 import uuid
 import argparse
-from shutil import rmtree,copyfile
+from shutil import rmtree, copyfile
 from glob import glob
 from time import time
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
 
 import numpy as np
 from numpy import ma
