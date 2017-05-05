@@ -1,8 +1,12 @@
-#!/bin/bash
-# Wrapper script for GVAR components from SSEC
+#!/usr/bin/env bash
 #
-# Copyright 2011, University of Wisconsin Regents.
-# Licensed under the GNU GPLv3.
+# ql_geocat_level1.sh
+# 
+# * DESCRIPTION: Wrapper script for ql_geocat_level1.py
+# 
+# Created by Geoff Cureton <geoff.cureton@ssec.wisc.edu> on 2014-04-01.
+# Copyright (c) 2014 University of Wisconsin SSEC. All rights reserved.
+# Licensed under GNU GPLv3.
 
 if [ -z "$CSPP_GEO_GEOCAT_HOME" ]; then
     echo "CSPP_GEO_GEOCAT_HOME must be set to the path where the CSPP software was installed."

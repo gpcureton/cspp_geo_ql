@@ -3,38 +3,11 @@
 """
 ql_geocat_level1.py
 
-Purpose: Plot a dataset from a geocat level-1 output file.
-
-Preconditions:
-
-Optional:
-
-Minimum commandline:
-
-    python ql_geocat_level1.py  INPUTFILE DATASET
-
-where...
-
-    INPUTFILE: The fully qualified path to the geocat level-1 input files.
-
-    DATASET: Name of a dataset in the HDF4 or NetCDF file.
-
+ * DESCRIPTION: Plot a dataset from a geocat level-1 output file.
 
 Created by Geoff Cureton <geoff.cureton@ssec.wisc.edu> on 2015-03-04.
 Copyright (c) 2015 University of Wisconsin Regents. All rights reserved.
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+Licensed under GNU GPLv3.
 """
 
 import os
@@ -375,8 +348,10 @@ def _argparse():
                       dest='verbosity',
                       action="count",
                       default=2,
-                      help='''each occurrence increases verbosity 1 level from ERROR:''' \
-                              ''' -v=WARNING -vv=INFO -vvv=DEBUG'''
+                      help='Each occurrence increases verbosity one level from the default, ' \
+                              'where the levels\nare [ERROR, WARNING, INFO, DEBUG]. [default: INFO]'
+        #'''each occurrence increases verbosity 1 level from ERROR:''' \
+                              #''' -v=WARNING -vv=INFO -vvv=DEBUG'''
                       )
 
     parser.add_argument('-V', '--version',
