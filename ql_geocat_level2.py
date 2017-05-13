@@ -92,7 +92,7 @@ def _argparse():
     description = '''Create a plot of a level-2 dataset from a geocat netCDF4 file.'''
 
     usage = "usage: %prog [mandatory args] [options]"
-    version = 'cspp-geo-geocat-1.0a3'
+    version = 'cspp-geo-geocat-1.0'
 
     parser = argparse.ArgumentParser(
                                      description=description,
