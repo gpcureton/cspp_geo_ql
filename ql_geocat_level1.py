@@ -40,6 +40,10 @@ from ql_geocat_common import set_plot_navigation_bm as set_plot_navigation
 from ql_geocat_common import set_plot_styles
 from ql_geocat_common import list_l1_datasets as list_datasets
 
+import warnings
+import matplotlib.cbook
+warnings.filterwarnings("ignore",category=matplotlib.cbook.mplDeprecation)
+
 # every module should have a LOG object
 LOG = logging.getLogger(__file__)
 

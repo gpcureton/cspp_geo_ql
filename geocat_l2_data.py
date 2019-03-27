@@ -21,12 +21,12 @@ LOG = logging.getLogger(__file__)
 class Satellite(object):
 
     def factory(type):
-        if type == "GOES_NOP": 
+        if type == "GOES_NOP":
             return GOES_NOP()
-        if type == "Himawari": 
+        if type == "Himawari":
             return Himawari()
         assert 0, "Bad satellite creation: " + type
- 
+
     factory = staticmethod(factory)
 
     common_data = {}
